@@ -1,0 +1,862 @@
+<!--
+  Discovery — clickable prototype
+  Version 1.0.0 — 2026-09-08
+  Fourteen screens: Brad's side (inside the ClearPath CRM) and the customer's side.
+  Everything is fictional sample data. Nothing sends. Navigation only.
+  CHANGELOG
+  1.0.0  2026-09-08  First prototype, built alongside DISCOVERY_PLATFORM_PLAN.md 1.0.0.
+-->
+<title>Discovery Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Zilla+Slab:wght@600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root{
+    /* prototype chrome */
+    --rail:#1C2430; --rail-2:#27313F; --rail-text:#DCE3EC; --rail-dim:#8A96A6; --rail-on:#FFFFFF; --rail-mark:#7FB2D6;
+    --note:#F7F2E8; --note-ink:#6F5426; --note-line:#E6DAC2;
+    --ground:#E9ECEF;
+    /* CRM side — verified tokens from CRM_platform/app/globals.css */
+    --c-bg:#f5f5f4; --c-surface:#ffffff; --c-muted:#fafaf9; --c-border:#e7e5e4;
+    --c-text:#292524; --c-text-2:#57534e; --c-text-3:#78716c;
+    --c-primary:#c2410c; --c-primary-h:#9a3412; --c-accent:#ea580c; --c-accent-soft:#ffedd5;
+    --c-danger:#b91c1c; --c-danger-soft:#fef2f2;
+    /* prototype-only semantic tokens the CRM does not have yet */
+    --c-ok:#15803d; --c-ok-soft:#dcfce7; --c-info:#1d4ed8; --c-info-soft:#dbeafe;
+    /* customer side — the worksheet */
+    --w-bg:#F4F6F8; --w-paper:#fff; --w-ink:#1C2430; --w-ink-2:#4A5563; --w-ink-3:#7B8794;
+    --w-line:#DCE2E8; --w-line-2:#C3CCD6; --w-accent:#1D5C86; --w-accent-ink:#154A6D; --w-tint:#E8F0F7; --w-tint-2:#D2E1EE;
+    --w-sand:#F7F2E8; --w-sand-ink:#6F5426; --w-sand-line:#E6DAC2; --w-ok:#2A7A4B; --w-ok-tint:#E3F2E9;
+    --f-ui:"Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-disp:"Zilla Slab", Georgia, serif;
+    --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+  body{margin:0; background:var(--ground); color:var(--c-text); font-family:var(--f-ui); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+  button{font:inherit; cursor:pointer}
+  a{color:inherit}
+  h1,h2,h3,h4{margin:0; line-height:1.2; text-wrap:balance}
+
+  /* ---------- prototype chrome ---------- */
+  .proto{display:grid; grid-template-columns:240px 1fr; min-height:100vh}
+  .rail{background:var(--rail); color:var(--rail-text); padding:18px 14px; position:sticky; top:0; height:100vh; overflow:auto; display:flex; flex-direction:column; gap:14px}
+  .rail .brand{font-weight:700; font-size:15px; color:var(--rail-on); letter-spacing:.01em}
+  .rail .brand small{display:block; font-weight:400; color:var(--rail-dim); font-size:12px; margin-top:2px}
+  .rail .grp{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--rail-dim); margin:8px 0 4px}
+  .rail button.nav{display:flex; align-items:center; gap:9px; width:100%; text-align:left; background:none; border:0; color:var(--rail-text); padding:7px 9px; border-radius:6px; font-size:13.5px}
+  .rail button.nav:hover{background:var(--rail-2); color:var(--rail-on)}
+  .rail button.nav.on{background:var(--rail-2); color:var(--rail-on); box-shadow:inset 3px 0 0 var(--rail-mark)}
+  .rail button.nav .k{font-variant-numeric:tabular-nums; color:var(--rail-dim); font-size:12px; width:18px}
+  .rail button.nav:focus-visible{outline:2px solid var(--rail-mark); outline-offset:1px}
+  .rail .foot{margin-top:auto; font-size:12px; color:var(--rail-dim); line-height:1.45}
+  .rail .foot a{color:var(--rail-text)}
+  .rail .side{font-size:11px; color:var(--rail-dim); padding:2px 9px 0}
+  .stage{padding:22px 28px 60px; min-width:0}
+  .screen{display:none}
+  .screen.on{display:block}
+  .screen-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:12px; flex-wrap:wrap}
+  .screen-head h1{font-size:19px; font-weight:600; color:var(--c-text)}
+  .screen-head .who{font-size:13px; color:var(--c-text-3)}
+  .decide{background:var(--note); border:1px solid var(--note-line); border-radius:8px; padding:12px 16px; margin-bottom:16px; color:var(--note-ink)}
+  .decide summary{cursor:pointer; font-weight:600; font-size:13px; letter-spacing:.04em; text-transform:uppercase; list-style:none; display:flex; gap:8px; align-items:center}
+  .decide summary::-webkit-details-marker{display:none}
+  .decide summary::before{content:"?"; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--note-ink); color:var(--note); font-size:12px}
+  .decide ul{margin:8px 0 0; padding-left:18px; font-size:14px; color:#4A3A1E}
+  .decide li{margin-bottom:4px}
+  .pager{display:flex; justify-content:space-between; gap:10px; margin-top:18px}
+  .pager button{background:var(--rail); color:var(--rail-on); border:0; border-radius:6px; padding:9px 14px; font-weight:500}
+  .pager button:disabled{opacity:.35; cursor:default}
+
+  /* ---------- CRM app chrome ---------- */
+  .crm{font-family:var(--f-ui); background:var(--c-bg); color:var(--c-text); border:1px solid var(--c-border); border-radius:10px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .crm .top{display:flex; align-items:center; gap:22px; padding:0 22px; height:52px; background:var(--c-surface); border-bottom:1px solid var(--c-border)}
+  .crm .top .logo{font-weight:700; letter-spacing:-.01em}
+  .crm .top .logo span{color:var(--c-primary)}
+  .crm .top nav{display:flex; gap:4px}
+  .crm .top nav a{text-decoration:none; padding:6px 10px; border-radius:6px; color:var(--c-text-2); font-weight:500}
+  .crm .top nav a.on{background:var(--c-accent-soft); color:var(--c-primary)}
+  .crm .top .me{margin-left:auto; color:var(--c-text-3); font-size:13px}
+  .crm .body{padding:22px}
+  .crm h2{font-size:22px; font-weight:600; letter-spacing:-.01em}
+  .crm h3{font-size:15px; font-weight:600}
+  .crm .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .crm .row.between{justify-content:space-between}
+  .crm .sub{color:var(--c-text-3); font-size:13px}
+  .crm .btn{border:1px solid var(--c-border); background:var(--c-surface); color:var(--c-text); border-radius:6px; padding:8px 13px; font-weight:500; font-size:13.5px}
+  .crm .btn:hover{border-color:var(--c-text-3)}
+  .crm .btn.pri{background:var(--c-primary); border-color:var(--c-primary); color:#fff}
+  .crm .btn.pri:hover{background:var(--c-primary-h)}
+  .crm .btn.quiet{border-color:transparent; color:var(--c-text-2)}
+  .crm .btn:focus-visible,.crm input:focus-visible,.crm textarea:focus-visible{outline:2px solid var(--c-accent); outline-offset:2px}
+  .crm .panel{background:var(--c-surface); border:1px solid var(--c-border); border-radius:8px}
+  .crm .panel .ph{padding:12px 16px; border-bottom:1px solid var(--c-border); display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .crm .panel .pb{padding:16px}
+  .crm table{width:100%; border-collapse:collapse; font-size:13.5px}
+  .crm th{text-align:left; font-weight:500; color:var(--c-text-3); font-size:12px; letter-spacing:.03em; text-transform:uppercase; padding:10px 14px; border-bottom:1px solid var(--c-border); background:var(--c-muted)}
+  .crm td{padding:12px 14px; border-bottom:1px solid var(--c-border); vertical-align:top}
+  .crm tr:last-child td{border-bottom:0}
+  .crm tr.click{cursor:pointer}
+  .crm tr.click:hover td{background:var(--c-muted)}
+  .crm .name{font-weight:600}
+  .crm .name small{display:block; font-weight:400; color:var(--c-text-3)}
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:500; white-space:nowrap; background:var(--c-muted); color:var(--c-text-2); border:1px solid var(--c-border)}
+  .chip::before{content:""; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.7}
+  .chip.sent{color:var(--c-text-2)}
+  .chip.opened{background:var(--c-info-soft); color:var(--c-info); border-color:transparent}
+  .chip.prog{background:var(--c-accent-soft); color:var(--c-primary); border-color:transparent}
+  .chip.done{background:var(--c-ok-soft); color:var(--c-ok); border-color:transparent}
+  .chip.draft{color:var(--c-text-3); border-style:dashed}
+  .chip.draft::before{display:none}
+  .tier{display:inline-block; font-size:11.5px; font-weight:600; letter-spacing:.04em; padding:1px 6px; border-radius:4px; background:var(--c-muted); border:1px solid var(--c-border); color:var(--c-text-2)}
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:16px 0 18px}
+  .tile{background:var(--c-surface); border:1px solid var(--c-border); border-radius:8px; padding:12px 14px}
+  .tile .n{font-size:24px; font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .tile .l{font-size:12.5px; color:var(--c-text-3)}
+  .tile .d{font-size:12px; color:var(--c-text-2); margin-top:4px}
+  .crm .stepper{display:flex; gap:0; margin:14px 0 20px; border:1px solid var(--c-border); border-radius:8px; overflow:hidden; background:var(--c-surface)}
+  .crm .stepper div{flex:1; padding:10px 14px; font-size:13px; color:var(--c-text-3); border-right:1px solid var(--c-border); display:flex; gap:8px; align-items:center}
+  .crm .stepper div:last-child{border-right:0}
+  .crm .stepper div b{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--c-muted); color:var(--c-text-3); font-size:12px; font-weight:600; border:1px solid var(--c-border)}
+  .crm .stepper div.on{color:var(--c-text); font-weight:500}
+  .crm .stepper div.on b{background:var(--c-primary); color:#fff; border-color:var(--c-primary)}
+  .crm .stepper div.did b{background:var(--c-ok-soft); color:var(--c-ok); border-color:transparent}
+  .crm label.f{display:block; font-size:12.5px; color:var(--c-text-2); margin-bottom:4px; font-weight:500}
+  .crm input[type=text], .crm input[type=search], .crm textarea{font:inherit; width:100%; border:1px solid var(--c-border); border-radius:6px; padding:8px 10px; background:var(--c-surface); color:var(--c-text)}
+  .crm textarea{min-height:110px; line-height:1.5; resize:vertical}
+  .crm .g2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .crm .g3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  .crm .gA{display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start}
+  .crm .hit{display:flex; justify-content:space-between; align-items:center; padding:9px 12px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface)}
+  .crm .hit.sel{border-color:var(--c-accent); background:var(--c-accent-soft)}
+  .crm .hit small{color:var(--c-text-3)}
+  .crm .fam{border:1px solid var(--c-border); border-radius:8px; background:var(--c-surface); padding:12px 14px; cursor:pointer}
+  .crm .fam.sel{border-color:var(--c-accent); box-shadow:0 0 0 2px var(--c-accent-soft)}
+  .crm .fam .t{font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:8px}
+  .crm .fam .s{font-size:12.5px; color:var(--c-text-3); margin-top:2px}
+  .crm .fam .sw{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap}
+  .crm .sw span{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--c-border); color:var(--c-text-2)}
+  .crm .sw span.on{background:var(--c-text); color:#fff; border-color:var(--c-text)}
+  .crm .tog{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--c-border); border-radius:6px; background:var(--c-surface)}
+  .crm .tog label{display:flex; gap:8px; align-items:center; cursor:pointer; user-select:none}
+  .crm .tog input{accent-color:var(--c-primary); width:16px; height:16px}
+  .crm .tiers{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px}
+  .crm .tier-card{border:1px solid var(--c-border); border-radius:8px; padding:10px 12px; background:var(--c-surface); cursor:pointer}
+  .crm .tier-card.sel{border-color:var(--c-primary); box-shadow:0 0 0 2px var(--c-accent-soft)}
+  .crm .tier-card b{display:block}
+  .crm .tier-card small{color:var(--c-text-3); display:block; margin-top:2px}
+  .crm .tier-card .sug{display:inline-block; margin-top:6px; font-size:11.5px; color:var(--c-primary); font-weight:600}
+  .crm .tl{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0}
+  .crm .tl li{display:grid; grid-template-columns:18px 1fr; gap:12px; padding:0 0 16px; position:relative}
+  .crm .tl li::before{content:""; position:absolute; left:8px; top:18px; bottom:0; width:2px; background:var(--c-border)}
+  .crm .tl li:last-child::before{display:none}
+  .crm .tl .dot{width:18px; height:18px; border-radius:50%; background:var(--c-ok); border:3px solid var(--c-ok-soft); box-sizing:border-box}
+  .crm .tl .dot.now{background:var(--c-primary); border-color:var(--c-accent-soft)}
+  .crm .tl .dot.todo{background:var(--c-surface); border:2px solid var(--c-border)}
+  .crm .tl b{display:block; font-weight:600}
+  .crm .tl small{color:var(--c-text-3)}
+  .crm .bar{height:8px; background:var(--c-border); border-radius:4px; overflow:hidden}
+  .crm .bar i{display:block; height:100%; background:var(--c-primary); width:40%}
+  .crm .ans{border-top:1px solid var(--c-border); padding:12px 0}
+  .crm .ans:first-child{border-top:0}
+  .crm .ans .q{font-size:12.5px; color:var(--c-text-3); margin-bottom:3px}
+  .crm .ans .a{white-space:pre-wrap}
+  .crm .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:13px}
+  .crm .kv dt{color:var(--c-text-3)} .crm .kv dd{margin:0}
+  .crm .email{font-family:ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.55; background:var(--c-muted); border:1px solid var(--c-border); border-radius:6px; padding:14px}
+  .crm .mini{border:1px solid var(--c-border); border-radius:8px; overflow:hidden; background:var(--w-bg)}
+  .crm .note-chip{display:inline-flex; gap:6px; align-items:center; background:var(--c-accent-soft); color:var(--c-primary); border-radius:999px; padding:3px 10px; font-size:12.5px; font-weight:500}
+  .crm .warn{background:var(--c-danger-soft); color:var(--c-danger); border:1px solid #fecaca; border-radius:6px; padding:8px 12px; font-size:13px}
+
+  /* ---------- customer frames ---------- */
+  .browser{border:1px solid #cfd5dc; border-radius:10px; overflow:hidden; background:var(--w-bg); box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .browser .addr{display:flex; align-items:center; gap:10px; background:#F0F2F5; border-bottom:1px solid #d8dee5; padding:8px 12px}
+  .browser .addr .dots{display:flex; gap:5px} .browser .addr .dots i{width:10px; height:10px; border-radius:50%; background:#c9d0d8}
+  .browser .addr .url{flex:1; background:#fff; border:1px solid #d8dee5; border-radius:6px; padding:4px 10px; font-size:12.5px; color:#5B6572; font-family:var(--f-ui)}
+  .browser .addr .url b{color:#1C2430; font-weight:500}
+  .phones{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start}
+  .phone{width:390px; height:760px; border:10px solid #1e2430; border-radius:38px; background:var(--w-bg); overflow:hidden; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.18); flex:none}
+  .phone .notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:26px; background:#1e2430; border-radius:0 0 16px 16px}
+  .phone .sc{height:100%; overflow:auto; padding:44px 18px 22px; display:flex; flex-direction:column}
+  .phone-cap{font-size:12.5px; color:var(--c-text-3); margin-top:8px; text-align:center; width:390px}
+
+  /* worksheet look (customer side) */
+  .wk{font-family:var(--f-body); color:var(--w-ink); font-size:16px; line-height:1.5; background:var(--w-bg)}
+  .wk h1,.wk h2,.wk h3{font-family:var(--f-disp)}
+  .wk .wbar{display:flex; align-items:center; gap:12px; padding:9px 18px; background:rgba(255,255,255,.95); border-bottom:1px solid var(--w-line); font-size:13px; color:var(--w-ink-2)}
+  .wk .wbar .t{font-family:var(--f-disp); font-weight:600; font-size:15px; color:var(--w-ink)}
+  .wk .track{flex:1; height:6px; background:var(--w-line); border-radius:3px; overflow:hidden} .wk .track i{display:block; height:100%; background:var(--w-accent)}
+  .wk .pill{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--w-line)}
+  .wk .pill.ok{background:var(--w-ok-tint); color:var(--w-ok); border-color:transparent}
+  .wk .wrap{max-width:760px; margin:0 auto; padding:26px 22px 30px}
+  .wk .eyebrow{font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--w-accent)}
+  .wk .lede{font-size:18px; color:var(--w-ink-2)}
+  .wk p{margin:0 0 10px}
+  .wk .part-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; border-top:3px solid var(--w-accent); padding-top:18px; margin-top:6px}
+  .wk .part-num{font-family:var(--f-disp); font-weight:700; color:var(--w-accent); font-size:13px; letter-spacing:.08em; text-transform:uppercase}
+  .wk .part-min{font-size:12.5px; color:var(--w-ink-2); border:1px solid var(--w-line-2); border-radius:999px; padding:0 8px}
+  .wk .intro{color:var(--w-ink-2); font-size:16.5px; margin:8px 0 14px}
+  .wk .callout{border-radius:8px; padding:12px 14px; margin:0 0 16px; font-size:15px}
+  .wk .callout .eyebrow{display:block; margin-bottom:6px}
+  .wk .callout.tips{background:var(--w-sand); border:1px solid var(--w-sand-line)} .wk .callout.tips .eyebrow{color:var(--w-sand-ink)}
+  .wk .callout.rule{background:var(--w-paper); border:1px solid var(--w-line); border-left:4px solid var(--w-accent)}
+  .wk .callout.ask{background:var(--w-tint); border:1px solid var(--w-tint-2)} .wk .callout.ask .eyebrow{color:var(--w-accent-ink)}
+  .wk .callout ul{margin:0; padding-left:18px} .wk .callout li{margin-bottom:4px}
+  .wk .q{margin:0 0 20px}
+  .wk .q-label{display:block; font-weight:600; font-size:16.5px; margin-bottom:3px}
+  .wk .q-help{font-size:14.5px; color:var(--w-ink-2); margin:0 0 8px}
+  .wk textarea,.wk input[type=text]{font:inherit; width:100%; border:1px solid var(--w-line-2); border-radius:6px; padding:9px 12px; background:var(--w-paper); color:var(--w-ink); display:block}
+  .wk textarea{min-height:80px; resize:vertical}
+  .wk .ex{margin-top:8px; border:1px solid var(--w-tint-2); background:var(--w-tint); border-radius:8px; padding:8px 12px; font-size:14.5px}
+  .wk .ex b{display:block; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--w-accent-ink); margin-bottom:4px}
+  .wk .ex .r{margin-bottom:6px} .wk .ex .r i{color:var(--w-ink-2); font-style:normal}
+  .wk .chips{display:flex; flex-wrap:wrap; gap:6px}
+  .wk .chips span{font-size:14px; padding:5px 10px; border:1px solid var(--w-line); border-radius:6px; background:var(--w-paper)}
+  .wk .chips span.on{border-color:var(--w-accent); background:var(--w-tint)}
+  .wk .tbl{border:1px solid var(--w-line); border-radius:8px; background:var(--w-paper); overflow:auto}
+  .wk .tbl table{width:100%; border-collapse:collapse; font-size:14px}
+  .wk .tbl th{background:var(--w-bg); text-align:left; font-weight:600; color:var(--w-ink-2); font-size:12.5px; padding:8px 10px; border-bottom:1px solid var(--w-line); border-right:1px solid var(--w-line)}
+  .wk .tbl td{padding:8px 10px; border-bottom:1px solid var(--w-line); border-right:1px solid var(--w-line); vertical-align:top}
+  .wk .tbl td.n{color:var(--w-ink-3); text-align:center; background:var(--w-bg); width:34px}
+  .wk .tbl td.ph{color:var(--w-ink-3)}
+  .wk .tbl tr:last-child td{border-bottom:0} .wk .tbl th:last-child,.wk .tbl td:last-child{border-right:0}
+  .wk .btn{font:inherit; font-weight:600; border-radius:6px; padding:10px 16px; border:1px solid var(--w-line-2); background:var(--w-paper); color:var(--w-ink); cursor:pointer}
+  .wk .btn.pri{background:var(--w-accent); color:#fff; border-color:var(--w-accent)}
+  .wk .btn.link{border:0; background:none; text-decoration:underline; text-underline-offset:3px; font-weight:400; color:var(--w-ink-2); padding:6px 2px}
+  .wk .sit{display:grid; grid-template-columns:200px 1fr; gap:22px}
+  .wk .sitnav{position:sticky; top:12px; align-self:start; font-size:14px}
+  .wk .sitnav .s{border:1px solid var(--w-line); border-radius:8px; padding:10px 12px; background:var(--w-paper); margin-bottom:10px}
+  .wk .sitnav .s b{display:block; font-family:var(--f-disp)} .wk .sitnav .s small{color:var(--w-ink-2)}
+  .wk .sitnav .s.on{border-color:var(--w-accent); box-shadow:0 0 0 2px var(--w-tint)}
+  .wk .sitnav ol{margin:6px 0 0; padding-left:18px; color:var(--w-ink-2)} .wk .sitnav li.done{color:var(--w-ok)} .wk .sitnav li.now{color:var(--w-ink); font-weight:600}
+  .wk .drop{border:2px dashed var(--w-line-2); border-radius:8px; padding:14px; text-align:center; color:var(--w-ink-2); background:var(--w-paper)}
+  .wk .drop .file{display:inline-block; margin:6px 4px 0; padding:4px 10px; border:1px solid var(--w-line); border-radius:999px; font-size:13.5px; background:var(--w-bg); color:var(--w-ink)}
+  .wk .stmt{font-size:13.5px; color:var(--w-ink-2); border-top:1px solid var(--w-line); padding-top:10px; margin-top:16px}
+  /* phone-specific worksheet */
+  .ph1 .q-label{font-size:21px; line-height:1.25; font-family:var(--f-disp); font-weight:600}
+  .ph1 .q-help{font-size:15px}
+  .ph1 textarea{min-height:150px; font-size:17px; flex:1}
+  .ph1 .foot{margin-top:auto; display:flex; gap:8px; padding-top:12px}
+  .ph1 .foot .btn{flex:1; padding:13px}
+  .ph1 .mic{display:flex; gap:8px; align-items:center; font-size:13.5px; color:var(--w-ink-2); margin:8px 0 0}
+  .ph1 .mic i{display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--w-tint); color:var(--w-accent-ink); font-style:normal; font-size:12px; font-weight:700}
+  .ph1 .top{display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--w-ink-2); margin-bottom:12px}
+  .ph1 .top b{font-family:var(--f-disp); color:var(--w-ink); font-size:14px}
+  .ph1 .track{flex:none; height:6px}
+
+  @media (max-width:900px){ .proto{grid-template-columns:1fr} .rail{position:static; height:auto} .tiles{grid-template-columns:1fr 1fr} .crm .g3,.crm .gA,.crm .tiers{grid-template-columns:1fr} .wk .sit{grid-template-columns:1fr} }
+</style>
+
+<div class="proto">
+  <aside class="rail" aria-label="Prototype screens">
+    <div class="brand">Discovery<small>Clickable prototype · v1.0.0 · Sept 8</small></div>
+    <div>
+      <div class="grp">Your side · inside the CRM</div>
+      <button class="nav" data-go="home"><span class="k">1</span>Discovery home</button>
+      <button class="nav" data-go="who"><span class="k">2</span>New · Who</button>
+      <button class="nav" data-go="what"><span class="k">3</span>New · What</button>
+      <button class="nav" data-go="note"><span class="k">4</span>New · Your note</button>
+      <button class="nav" data-go="preview"><span class="k">5</span>New · Preview &amp; send</button>
+      <button class="nav" data-go="status"><span class="k">6</span>A send’s status</button>
+      <button class="nav" data-go="response"><span class="k">7</span>A completed response</button>
+      <button class="nav" data-go="library"><span class="k">8</span>The library</button>
+      <div class="grp">The customer’s side</div>
+      <button class="nav" data-go="email"><span class="k">9</span>The email</button>
+      <button class="nav" data-go="welcome"><span class="k">10</span>Welcome page</button>
+      <button class="nav" data-go="t1"><span class="k">11</span>Tier 1 · on a phone</button>
+      <button class="nav" data-go="t2"><span class="k">12</span>Tier 2 · the office</button>
+      <button class="nav" data-go="t3"><span class="k">13</span>Tier 3 · the organization</button>
+      <button class="nav" data-go="done"><span class="k">14</span>Done page</button>
+    </div>
+    <div class="foot">All names, companies and answers are fictional. Nothing sends. Use ← → keys to move between screens.<br><br><a id="planLink" href="#" hidden>Read the plan →</a></div>
+  </aside>
+
+  <main class="stage">
+
+  <!-- ============ 1 HOME ============ -->
+  <section class="screen" id="s-home">
+    <div class="screen-head"><h1>Discovery home</h1><span class="who">Your side · a new tab in the ClearPath CRM</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Is Discovery its own tab (this) or a column on the lead board? I chose a tab: sends have a life of their own after Closed won.</li>
+      <li>Are these the right statuses: Sent → Opened → In progress → Submitted → Brief drafted? “Opened” means they viewed the page; there is no tracking pixel.</li>
+      <li>Do you want the one-pager due date nagging you here (“What I heard due Tue”), or only in the daily brief?</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><div><h2>Discovery</h2><div class="sub">What each customer told you about where their time goes.</div></div><button class="btn pri" data-go="who">New discovery</button></div>
+        <div class="tiles">
+          <div class="tile"><div class="n">3</div><div class="l">Awaiting answers</div><div class="d">Oldest: Priya Nair, 3 days</div></div>
+          <div class="tile"><div class="n">4</div><div class="l">Submitted this month</div><div class="d">1 one-pager still to send</div></div>
+          <div class="tile"><div class="n">3.2 <span style="font-size:14px;font-weight:400">days</span></div><div class="l">Median time to submit</div><div class="d">Tier 2 · 27 min on the page</div></div>
+          <div class="tile"><div class="n">5</div><div class="l">Packs in the library</div><div class="d">4 ready · 1 draft</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><h3>Recent</h3><span class="sub">Newest first</span></div>
+          <table>
+            <thead><tr><th>Customer</th><th>Trade · tier</th><th>Sent</th><th>Status</th><th>Next</th></tr></thead>
+            <tbody>
+              <tr class="click" data-go="preview"><td class="name">Mike Delgado<small>Delgado Heating &amp; Cooling</small></td><td>Field service · HVAC <span class="tier">T1</span></td><td>—</td><td><span class="chip draft">Draft</span></td><td><button class="btn quiet" data-go="who">Finish setup →</button></td></tr>
+              <tr class="click" data-go="status"><td class="name">Renee Alvarez<small>Kessler &amp; Pratt CPAs</small></td><td>Accounting · CPA <span class="tier">T2</span></td><td>Mon Sep 8</td><td><span class="chip sent">Sent</span></td><td class="sub">—</td></tr>
+              <tr class="click" data-go="status"><td class="name">Priya Nair<small>Nair Bookkeeping</small></td><td>Accounting · bookkeeping <span class="tier">T2</span></td><td>Fri Sep 5</td><td><span class="chip opened">Opened, not started</span></td><td>Reminder Wed Sep 10</td></tr>
+              <tr class="click" data-go="status"><td class="name">Tom Brennan<small>Meridian Mechanical</small></td><td>Field service · HVAC &amp; plumbing <span class="tier">T3</span></td><td>Thu Sep 4</td><td><span class="chip prog">In progress · 40%</span></td><td class="sub">Sitting 2 of 2 not started</td></tr>
+              <tr class="click" data-go="response"><td class="name">Dana Whitcomb<small>Harbor Point Retreat Center</small></td><td>Venues · retreat center <span class="tier">T2</span></td><td>Tue Sep 2</td><td><span class="chip done">Submitted Fri Sep 5</span></td><td><b style="color:var(--c-primary)">“What I heard” due Tue Sep 9</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button disabled>← Previous</button><button data-go="who">Next: New · Who →</button></div>
+  </section>
+
+  <!-- ============ 2 WHO ============ -->
+  <section class="screen" id="s-who">
+    <div class="screen-head"><h1>New discovery · Who</h1><span class="who">Step 1 of 4 · under two minutes for all four</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Only leads at <b>Closed won</b> show in search (my choice — discovery is post-sale). Do you want any lead?</li>
+      <li>Should you also be able to start a discovery from the lead’s own page? I’d say yes, later.</li>
+      <li>Typing a name creates the lead in the CRM. Fine, or should it stay separate?</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <h2>New discovery</h2>
+        <div class="stepper"><div class="on"><b>1</b>Who</div><div><b>2</b>What</div><div><b>3</b>Your note</div><div><b>4</b>Preview &amp; send</div></div>
+        <div class="gA">
+          <div class="panel"><div class="ph"><h3>Pick the customer</h3><span class="sub">Leads at Closed won</span></div><div class="pb">
+            <input type="search" value="delg" aria-label="Search leads">
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+              <div class="hit sel"><div><b>Mike Delgado</b> · Delgado Heating &amp; Cooling<br><small>mike@delgadohvac.example.com · (856) 555-0142 · Closed won Sep 6 · $4,800</small></div><span class="chip done">Selected</span></div>
+              <div class="hit"><div><b>Sandra Delgado-Ruiz</b> · Ruiz &amp; Delgado Law<br><small>Closed won Aug 28 · $9,500</small></div></div>
+            </div>
+          </div></div>
+          <div class="panel"><div class="ph"><h3>Or type them in</h3><span class="sub">Creates the lead</span></div><div class="pb" style="display:grid;gap:10px">
+            <div><label class="f">Name</label><input type="text" placeholder="First and last"></div>
+            <div><label class="f">Company</label><input type="text" placeholder="Business name"></div>
+            <div class="g2"><div><label class="f">Email</label><input type="text" placeholder="name@company.com"></div><div><label class="f">Phone</label><input type="text" placeholder="(609) 555-0100"></div></div>
+          </div></div>
+        </div>
+        <div class="row between" style="margin-top:16px"><button class="btn quiet" data-go="home">Cancel</button><button class="btn pri" data-go="what">Next: What →</button></div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="home">← Discovery home</button><button data-go="what">Next: New · What →</button></div>
+  </section>
+
+  <!-- ============ 3 WHAT ============ -->
+  <section class="screen" id="s-what">
+    <div class="screen-head"><h1>New discovery · What</h1><span class="who">Step 2 of 4 · the trade and the tier</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Are the three toggles the right three? They drive the suggested tier (try them — the suggestion updates).</li>
+      <li>Packs are grouped by family, with a trade switch inside (HVAC / plumbing / electrical). Or do you want one card per trade?</li>
+      <li>The customer never sees “Tier 1/2/3.” They see a time estimate. Confirm.</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><h2>New discovery</h2><span class="sub">For <b>Mike Delgado</b> · Delgado Heating &amp; Cooling</span></div>
+        <div class="stepper"><div class="did"><b>✓</b>Who</div><div class="on"><b>2</b>What</div><div><b>3</b>Your note</div><div><b>4</b>Preview &amp; send</div></div>
+        <div class="gA">
+          <div>
+            <h3 style="margin-bottom:8px">Their trade</h3>
+            <div style="display:grid;gap:10px">
+              <div class="fam sel"><div class="t">Field-service trades <span class="chip done">Ready · v1.0</span></div><div class="s">Dispatch, estimates, maintenance agreements, parts, callbacks, tech notes → invoice</div><div class="sw"><span class="on">HVAC</span><span>Plumbing</span><span>Electrical</span></div></div>
+              <div class="fam"><div class="t">Accounting practices <span class="chip done">Ready · v1.0</span></div><div class="s">Client document chasing, engagement letters, busy season, reconciliations, 1099s</div><div class="sw"><span>CPA</span><span>Bookkeeping</span><span>Tax prep</span></div></div>
+              <div class="fam"><div class="t">Small law firms <span class="chip prog">Ready · awaiting your review</span></div><div class="s">Intake, conflict checks, matter deadlines, trust accounting, document assembly</div></div>
+              <div class="fam"><div class="t">Contractors <span class="chip draft">Draft</span></div><div class="s">Bids, change orders, subs, draws, punch lists</div></div>
+              <div class="fam"><div class="t">Venues <span class="chip done">Ready · v1.0</span></div><div class="s">Retreat centers, conference and event venues</div></div>
+              <div class="fam"><div class="t">Not researched yet <span class="chip draft">Generic</span></div><div class="s">Falls back to the generic worksheet. Research the pack the week the deal closes.</div></div>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin-bottom:8px">How much structure do they have?</h3>
+            <div style="display:grid;gap:8px">
+              <div class="tog"><label><input type="checkbox" class="tg"> There’s an office — someone besides the owner runs it</label></div>
+              <div class="tog"><label><input type="checkbox" class="tg"> They have a system of record beyond QuickBooks, texts and paper</label></div>
+              <div class="tog"><label><input type="checkbox" class="tg"> Departments or branches, with someone who owns each</label></div>
+            </div>
+            <div class="tiers">
+              <div class="tier-card sel" data-t="1"><b>Owner-operator</b><small>~12 min on a phone, or a 20-minute call</small><span class="sug">Suggested</span></div>
+              <div class="tier-card" data-t="2"><b>The office</b><small>20–30 min</small><span class="sug" hidden>Suggested</span></div>
+              <div class="tier-card" data-t="3"><b>The organization</b><small>45–60 min, two sittings</small><span class="sug" hidden>Suggested</span></div>
+            </div>
+            <p class="sub" style="margin:10px 0 0">The suggestion is a default. When you’re unsure, send “The office.” The customer sees only the time estimate.</p>
+          </div>
+        </div>
+        <div class="row between" style="margin-top:16px"><button class="btn quiet" data-go="who">← Back</button><button class="btn pri" data-go="note">Next: Your note →</button></div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="who">← New · Who</button><button data-go="note">Next: New · Your note →</button></div>
+  </section>
+
+  <!-- ============ 4 NOTE ============ -->
+  <section class="screen" id="s-note">
+    <div class="screen-head"><h1>New discovery · Your note</h1><span class="who">Step 3 of 4 · the most human thing in the system</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Is the default note in your voice? It has to be good enough to send unchanged on a busy day.</li>
+      <li>“Ask especially about…” inserts your prompts into the pain inventory. Useful, or one thing too many?</li>
+      <li>Interview mode is on by default for owner-operators. Should it be offered on every tier?</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><h2>New discovery</h2><span class="sub">Mike Delgado · Field service (HVAC) · Owner-operator</span></div>
+        <div class="stepper"><div class="did"><b>✓</b>Who</div><div class="did"><b>✓</b>What</div><div class="on"><b>3</b>Your note</div><div><b>4</b>Preview &amp; send</div></div>
+        <div class="gA">
+          <div class="panel"><div class="ph"><h3>Your note to Mike</h3><span class="sub">Appears at the top of his welcome page and in the email</span></div><div class="pb">
+            <textarea style="min-height:170px">Mike — good talking yesterday. This is the first thing I do with every customer: about twelve minutes of you telling me where your time goes, in your own words, so the first thing I build for you is the right thing. Nothing technical. If you’d rather do it on a call, reply to this and I’ll set it up.
+
+— Brad</textarea>
+            <div class="row" style="margin-top:10px"><span class="sub">Default shown. Edit anything.</span><button class="btn quiet">Reset to default</button></div>
+          </div></div>
+          <div style="display:grid;gap:14px">
+            <div class="panel"><div class="ph"><h3>Ask especially about…</h3><span class="sub">Optional</span></div><div class="pb">
+              <div class="row"><span class="note-chip">the maintenance-agreement renewals you mentioned ×</span><span class="note-chip">the two guys who don’t use the app ×</span></div>
+              <input type="text" placeholder="Add a prompt and press Enter" style="margin-top:10px">
+              <p class="sub" style="margin:8px 0 0">These appear as prompts in his pain inventory, in your words.</p>
+            </div></div>
+            <div class="panel"><div class="ph"><h3>Options</h3></div><div class="pb" style="display:grid;gap:8px">
+              <div class="tog"><label><input type="checkbox" checked> Offer to do it on a call (interview mode)</label></div>
+              <div class="tog"><label><input type="checkbox" checked> Remind me to send the one-pager two business days after he submits</label></div>
+              <div class="tog"><label><input type="checkbox"> Send a reminder if he hasn’t started in five days</label></div>
+              <div class="kv" style="margin-top:4px"><dt>From</dt><dd>Brad Coulter &lt;brad@clearpathlabs.dev&gt;</dd><dt>Reply-to</dt><dd>same</dd></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="row between" style="margin-top:16px"><button class="btn quiet" data-go="what">← Back</button><button class="btn pri" data-go="preview">Next: Preview →</button></div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="what">← New · What</button><button data-go="preview">Next: Preview &amp; send →</button></div>
+  </section>
+
+  <!-- ============ 5 PREVIEW ============ -->
+  <section class="screen" id="s-preview">
+    <div class="screen-head"><h1>New discovery · Preview &amp; send</h1><span class="who">Step 4 of 4 · exactly what Mike will see</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Plain-text email, one link, no logo block. Or lightly styled with the ClearPath wordmark?</li>
+      <li>Subject line: “The 12-minute worksheet I mentioned.” Better ideas welcome.</li>
+      <li>Should the link expire? I’d say no — it stops working only after he submits and you close it.</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><h2>New discovery</h2><span class="sub">Mike Delgado · Field service (HVAC) · Owner-operator · ~12 min</span></div>
+        <div class="stepper"><div class="did"><b>✓</b>Who</div><div class="did"><b>✓</b>What</div><div class="did"><b>✓</b>Your note</div><div class="on"><b>4</b>Preview &amp; send</div></div>
+        <div class="g2">
+          <div class="panel"><div class="ph"><h3>The email</h3><span class="sub">Plain text</span></div><div class="pb">
+<div class="email">From: Brad Coulter &lt;brad@clearpathlabs.dev&gt;
+To: Mike Delgado &lt;mike@delgadohvac.example.com&gt;
+Subject: The 12-minute worksheet I mentioned
+
+Mike — good talking yesterday. This is the first thing I do with every customer: about twelve minutes of you telling me where your time goes, in your own words, so the first thing I build for you is the right thing. Nothing technical. If you’d rather do it on a call, reply to this and I’ll set it up.
+
+Here’s the link. It works on your phone:
+https://clearpathlabs.dev/discovery/k7m2-4hqx-p9de
+
+Your answers save as you go, so you can stop and come back. When you’re done I’ll read it and get back to you within two business days with a one-page summary of what I heard and what we could build first.
+
+— Brad
+Brad Coulter · ClearPath Labs · (609) 555-0148</div>
+          </div></div>
+          <div class="panel"><div class="ph"><h3>His welcome page</h3><button class="btn quiet" data-go="welcome">Open full size →</button></div><div class="pb">
+            <div class="mini wk"><div class="wrap" style="padding:20px 22px">
+              <span class="eyebrow">Delgado Heating &amp; Cooling · about 12 minutes</span>
+              <h1 style="font-size:26px;margin:6px 0 10px">Hi Mike — Brad here.</h1>
+              <p class="lede" style="font-size:15px">Good talking yesterday. This is the first thing I do with every customer: about twelve minutes of you telling me where your time goes…</p>
+              <p style="font-size:14px;color:var(--w-ink-2)"><b>What happens after:</b> I read it within two business days and send you a one-page summary of what I heard and the two or three things we could build first.</p>
+              <div class="row" style="gap:8px"><span class="btn pri" style="font-size:14px;padding:8px 14px">Start</span><span class="btn link" style="font-size:14px">I’d rather do this on a call</span></div>
+            </div></div>
+          </div></div>
+        </div>
+        <div class="row between" style="margin-top:16px"><button class="btn quiet" data-go="note">← Back</button><div class="row"><button class="btn">Copy link instead</button><button class="btn pri" data-go="status">Send to Mike</button></div></div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="note">← New · Your note</button><button data-go="status">Next: A send’s status →</button></div>
+  </section>
+
+  <!-- ============ 6 STATUS ============ -->
+  <section class="screen" id="s-status">
+    <div class="screen-head"><h1>A send’s status</h1><span class="who">Tom Brennan · Tier 3, halfway through</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Is this much tracking useful, or does “Sent / Started / Submitted” cover it?</li>
+      <li>“Add a second respondent” exists because at Tier 3 the ops director is often not the person with the pain. Keep?</li>
+      <li>Interview mode opens the same worksheet on your screen so you can fill it in on a call. Is that how you’d want it?</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><div><h2>Tom Brennan · Meridian Mechanical</h2><div class="sub">Field service (HVAC &amp; plumbing) · The organization <span class="tier">T3</span> · pack v1.0 · sent Thu Sep 4</div></div><span class="chip prog">In progress · 40%</span></div>
+        <div class="gA" style="margin-top:16px">
+          <div class="panel"><div class="ph"><h3>Timeline</h3></div><div class="pb">
+            <ul class="tl">
+              <li><span class="dot"></span><div><b>Sent</b><small>Thu Sep 4, 9:14 am · to tbrennan@meridianmech.example.com</small></div></li>
+              <li><span class="dot"></span><div><b>Opened</b><small>Thu Sep 4, 11:02 am · first view of the welcome page (no tracking pixel)</small></div></li>
+              <li><span class="dot"></span><div><b>Started · sitting 1</b><small>Fri Sep 5, 8:40 am · Parts 1–5 done in 34 min</small></div></li>
+              <li><span class="dot now"></span><div><b>Sitting 2 not started</b><small>Parts 6–10 · systems, stakeholders, constraints, metrics, attachments</small><div class="bar" style="margin-top:8px;max-width:320px"><i></i></div></div></li>
+              <li><span class="dot todo"></span><div><b>Submitted</b><small>—</small></div></li>
+            </ul>
+            <div class="row" style="margin-top:6px"><button class="btn">Copy link</button><button class="btn">Resend</button><button class="btn">Send a reminder <span class="sub">(never sent)</span></button><button class="btn">Open in interview mode</button><button class="btn">Add a second respondent</button></div>
+          </div></div>
+          <div style="display:grid;gap:14px">
+            <div class="panel"><div class="ph"><h3>Your note, as sent</h3></div><div class="pb" style="font-size:13.5px;white-space:pre-wrap">Tom — thanks for the walkthrough of the three branches. This one is longer than the version I send owner-operators: two sittings of about thirty minutes, because I want the systems and the people, not just the pain. Do sitting 1 first and stop; the link brings you back.
+
+— Brad</div></div>
+            <div class="panel"><div class="ph"><h3>Respondents</h3></div><div class="pb">
+              <div class="kv"><dt>Tom Brennan</dt><dd>Director of Operations · primary · 40%</dd><dt>—</dt><dd class="sub">Add the branch manager or the controller if Tom names them in Part 8.</dd></div>
+            </div></div>
+            <div class="panel"><div class="ph"><h3>Ask especially about</h3></div><div class="pb"><span class="note-chip">the Google Sheet the branches report into</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="preview">← Preview &amp; send</button><button data-go="response">Next: A completed response →</button></div>
+  </section>
+
+  <!-- ============ 7 RESPONSE ============ -->
+  <section class="screen" id="s-response">
+    <div class="screen-head"><h1>A completed response</h1><span class="who">Dana Whitcomb · submitted Friday · the one-pager is due Tuesday</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>“Signals” on the right are pulled from the answers automatically. Useful shortcut, or noise next to the real answers?</li>
+      <li>Your notes: here, beside the answers (this), or in the lead’s activity timeline?</li>
+      <li>The two draft buttons produce documents for you to edit. Nothing goes to Dana until you send it. Confirm that’s the rule.</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><div><h2>Dana Whitcomb · Harbor Point Retreat Center</h2><div class="sub">Venues · The office <span class="tier">T2</span> · submitted Fri Sep 5, 4:12 pm · 27 min on the page · 49 of 52 answered</div></div><span class="chip done">Submitted</span></div>
+        <div class="row" style="margin:14px 0 16px"><button class="btn pri">Draft “what I heard” for Dana</button><button class="btn">Draft the build brief</button><button class="btn quiet">Export .md</button><button class="btn quiet">Export .json</button><button class="btn quiet">Print</button><span class="sub" style="margin-left:auto">One-pager due <b style="color:var(--c-primary)">Tue Sep 9</b></span></div>
+        <div class="gA">
+          <div class="panel"><div class="ph"><h3>Answers</h3><span class="sub">Part 2 · The pain inventory (showing 3 of 6 rows)</span></div><div class="pb">
+            <div class="ans"><div class="q">1 · What happened, concretely</div><div class="a">Last Thursday I built the rooming list for the Grace Fellowship retreat (86 people) from the leader’s emailed spreadsheet. Her columns didn’t match ours, four names were duplicates, and two rooms ended up double-assigned. Housekeeping found out Friday morning.<br><span class="sub">Every group, weekly in season · 2.5 hrs · Front desk (2), housekeeping lead, the group leader</span></div></div>
+            <div class="ans"><div class="q">2 · What happened, concretely</div><div class="a">Monday I re-typed 40 dietary restrictions from the group’s registration form into the kitchen’s sheet, because the export comes out as one paragraph per guest.<br><span class="sub">Every group · 45 min · Kitchen manager</span></div></div>
+            <div class="ans"><div class="q">3 · What happened, concretely</div><div class="a">Tuesday I went through 60 inquiry emails to find the ones actually ready to book and missed one that had been waiting nine days. She booked somewhere else.<br><span class="sub">Daily · 30 min plus the lost booking · Me; the sales coordinator</span></div></div>
+            <div class="ans"><div class="q">Part 4 · My #1 problem</div><div class="a">Row 1 — Turning each group leader’s roster into room assignments and guest records by hand.</div></div>
+            <div class="ans"><div class="q">Part 7 · The goal, in one sentence</div><div class="a">I’d want something that turns the leader’s roster (in any format) into a clean room-assignment sheet with the problems flagged, so that I can review, fix, and print it in under 20 minutes.</div></div>
+            <div class="ans"><div class="q">Part 7 · What should this NOT do?</div><div class="a">It should not email the group leader — I do that. It should not change anything in the reservation system on its own. It should not decide who rooms with whom when the request is ambiguous — flag it for me.</div></div>
+            <div class="row" style="margin-top:8px"><button class="btn quiet">Show all eight parts ↓</button></div>
+          </div></div>
+          <div style="display:grid;gap:14px">
+            <div class="panel"><div class="ph"><h3>Signals</h3><span class="sub">Pulled from the answers</span></div><div class="pb">
+              <dl class="kv"><dt>#1 problem</dt><dd>Roster → room assignments, by hand</dd><dt>Hands-on time</dt><dd>~2.5 hrs per group, weekly in season</dd><dt>Pain sits in</dt><dd>Getting inputs ready</dd><dt>Mode</dt><dd>Draft and I decide</dd><dt>Real examples</dt><dd class="a">Yes — 10–20 rosters, redacted</dd><dt>Sensitive data</dt><dd>Guest names · dietary/accessibility → redact</dd><dt>Systems</dt><dd>Reservation system (read only), Excel</dd><dt>Worksheet rating</dt><dd>4 / 5 · “Part 6 felt like the same question twice”</dd></dl>
+            </div></div>
+            <div class="panel"><div class="ph"><h3>Your notes</h3></div><div class="pb"><textarea placeholder="Part 2: three of the six rows are the same root cause — the roster. Part 6: she wants draft-and-decide; agree."></textarea></div></div>
+            <div class="panel"><div class="ph"><h3>Feedback on the worksheet</h3></div><div class="pb" style="font-size:13.5px"><b>Too long / about right / could be longer:</b> About right<br><b>Confusing:</b> “Part 6 ‘the no-software answer’ and ‘why isn’t that enough’ felt like one question”<br><b>Missing:</b> “Nothing about staff turnover, which is half of it”</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="status">← A send’s status</button><button data-go="library">Next: The library →</button></div>
+  </section>
+
+  <!-- ============ 8 LIBRARY ============ -->
+  <section class="screen" id="s-library">
+    <div class="screen-head"><h1>The library</h1><span class="who">Packs, tier profiles, and the spine</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Packs are JSON files in the repo, edited with Claude and reviewed as a diff. There is deliberately no editor here. Agree?</li>
+      <li>“Ready” means you signed off on every example. Do you want your sign-off date recorded per pack?</li>
+      <li>Is “Sources” worth showing here, or only in the file?</li>
+    </ul></details>
+    <div class="crm">
+      <div class="top"><div class="logo">ClearPath <span>CRM</span></div><nav><a href="#">Board</a><a href="#">Leads</a><a class="on" href="#">Discovery</a></nav><div class="me">Brad · signed in</div></div>
+      <div class="body">
+        <div class="row between"><div><h2>Library</h2><div class="sub">One spine · three tier profiles · five packs</div></div><span class="sub">Edited in the repo, not here</span></div>
+        <div class="panel" style="margin-top:14px">
+          <table>
+            <thead><tr><th>Pack</th><th>Trades</th><th>Status</th><th>Personas</th><th>Examples</th><th>Researched</th><th>Sources</th></tr></thead>
+            <tbody>
+              <tr><td class="name">Field-service trades</td><td>HVAC · plumbing · electrical</td><td><span class="chip done">Ready · v1.0</span></td><td>Ray (T1) · Carla (T2) · Denise (T3)</td><td>118</td><td>Sep 2026</td><td>14</td></tr>
+              <tr><td class="name">Accounting practices</td><td>CPA · bookkeeping · tax prep</td><td><span class="chip done">Ready · v1.0</span></td><td>Sam (T1) · Joanne (T2) · Marcus (T3)</td><td>112</td><td>Sep 2026</td><td>11</td></tr>
+              <tr><td class="name">Small law firms</td><td>solo · small practice</td><td><span class="chip prog">v0.9 · awaiting your review</span></td><td>3</td><td>104</td><td>Sep 2026</td><td>9</td></tr>
+              <tr><td class="name">Contractors</td><td>general · remodelers</td><td><span class="chip draft">Draft</span></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td class="name">Venues</td><td>retreat · conference · event</td><td><span class="chip done">Ready · v1.0</span></td><td>Dana (T2) · 2 more</td><td>96</td><td>Sep 2026</td><td>6 + 1 real worksheet</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="g2" style="margin-top:16px">
+          <div class="panel"><div class="ph"><h3>Field-service trades · what’s inside</h3></div><div class="pb">
+            <dl class="kv" style="margin-bottom:12px"><dt>Vocabulary</dt><dd>customer · job · tech · estimate · maintenance agreement · callback · truck stock · dispatch board</dd><dt>Systems list</dt><dd>ServiceTitan, Housecall Pro, Jobber, FieldEdge, QuickBooks, Google Calendar, a whiteboard, texts</dd><dt>Sensitive data</dt><dd>customer addresses and gate codes · card on file · EPA 608 records</dd><dt>Seasonality</dt><dd>cooling season June–Aug; heating Nov–Jan; shoulder months are when maintenance agreements get sold</dd></dl>
+            <b style="font-size:13px">Personas</b>
+            <div class="kv" style="margin-top:6px"><dt>Ray · T1</dt><dd>Owner, two trucks, runs it from his phone; QuickBooks at night</dd><dt>Carla · T2</dt><dd>Office manager, 12 techs, Housecall Pro plus four spreadsheets</dd><dt>Denise · T3</dt><dd>Ops director, three branches, ServiceTitan + Sage, a branch KPI sheet nobody trusts</dd></div>
+          </div></div>
+          <div class="panel"><div class="ph"><h3>How a pack gets researched</h3></div><div class="pb" style="font-size:13.5px">
+            <ol style="margin:0;padding-left:18px;display:grid;gap:6px">
+              <li><b>Job postings</b> for the office role — dispatcher, office manager, practice administrator. The real daily tasks and the real software, in the employer’s words.</li>
+              <li><b>Vendor workflow pages</b> — what the system of record actually does, and by omission what still lives in spreadsheets.</li>
+              <li><b>Practitioner forums</b> — the pain in the owner’s own words. Paraphrased, never invented, never attributed.</li>
+              <li><b>Licensing boards and regulators</b> — what’s required versus folklore.</li>
+              <li><b>Completed worksheets</b> — the best source; the reason pack ten will be better than pack one.</li>
+            </ol>
+            <p class="sub" style="margin:10px 0 0">One session per pack. Thirty minutes of your review. Nothing un-reviewed reaches a customer.</p>
+          </div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="response">← A completed response</button><button data-go="email">Next: The customer’s side →</button></div>
+  </section>
+
+  <!-- ============ 9 EMAIL ============ -->
+  <section class="screen" id="s-email">
+    <div class="screen-head"><h1>The email</h1><span class="who">The customer’s side · what Mike gets</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Four short paragraphs, one link, your signature. That’s the whole design. Anything missing?</li>
+      <li>Do you want your phone number in it? I put it in because Tier 1 people call.</li>
+    </ul></details>
+    <div class="browser"><div class="addr"><div class="dots"><i></i><i></i><i></i></div><div class="url">Mail · Inbox</div></div>
+      <div style="background:#fff;padding:26px 30px;font-family:var(--f-ui);max-width:760px">
+        <div style="font-size:18px;font-weight:600;margin-bottom:6px">The 12-minute worksheet I mentioned</div>
+        <div style="color:var(--c-text-3);font-size:13px;margin-bottom:18px">Brad Coulter &lt;brad@clearpathlabs.dev&gt; · to me · Mon, Sep 8, 9:40 AM</div>
+        <div style="font-size:15px;line-height:1.6;max-width:62ch;white-space:pre-wrap">Mike — good talking yesterday. This is the first thing I do with every customer: about twelve minutes of you telling me where your time goes, in your own words, so the first thing I build for you is the right thing. Nothing technical. If you’d rather do it on a call, reply to this and I’ll set it up.
+
+Here’s the link. It works on your phone:
+<a href="#" data-go="welcome" style="color:#1a56b0">https://clearpathlabs.dev/discovery/k7m2-4hqx-p9de</a>
+
+Your answers save as you go, so you can stop and come back. When you’re done I’ll read it and get back to you within two business days with a one-page summary of what I heard and what we could build first.
+
+— Brad
+Brad Coulter · ClearPath Labs · (609) 555-0148</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="library">← The library</button><button data-go="welcome">Next: Welcome page →</button></div>
+  </section>
+
+  <!-- ============ 10 WELCOME ============ -->
+  <section class="screen" id="s-welcome">
+    <div class="screen-head"><h1>Welcome page</h1><span class="who">clearpathlabs.dev/discovery/k7m2-4hqx-p9de · Mike, on his phone</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Your note is the headline. The “what happens after” line is the promise. Is the order right?</li>
+      <li>The call option sits under Start on Tier 1 only. Every tier?</li>
+      <li>The one-line data statement at the bottom — enough, or do you want a link to a fuller page?</li>
+    </ul></details>
+    <div class="phones">
+      <div>
+        <div class="phone"><div class="notch"></div><div class="sc wk" style="padding-top:48px">
+          <span class="eyebrow">Delgado Heating &amp; Cooling · about 12 minutes</span>
+          <h1 style="font-size:28px;margin:8px 0 12px;line-height:1.15">Hi Mike —<br>Brad here.</h1>
+          <p style="font-size:16.5px">Good talking yesterday. This is the first thing I do with every customer: about twelve minutes of you telling me where your time goes, in your own words, so the first thing I build for you is the right thing. Nothing technical.</p>
+          <div style="border:1px solid var(--w-line);border-radius:8px;padding:12px 14px;background:var(--w-paper);font-size:15px;margin:6px 0 14px">
+            <b>What happens after.</b> I read your answers within two business days and send you a one-page summary of what I heard and the two or three things we could build first. Then we pick one.
+          </div>
+          <p style="font-size:14.5px;color:var(--w-ink-2)">Fourteen questions, one at a time. Talk into your phone if that’s easier. Your answers save as you go — stop whenever, the link brings you back.</p>
+          <div style="margin-top:auto;display:grid;gap:8px">
+            <button class="btn pri" data-go="t1" style="padding:14px;font-size:17px">Start</button>
+            <button class="btn link">I’d rather do this on a call with Brad</button>
+            <div class="stmt" style="margin-top:6px">Only Brad sees your answers. They’re stored securely and deleted if you ask. Please don’t include your customers’ names or personal details.</div>
+          </div>
+        </div></div>
+        <div class="phone-cap">The same page on a laptop is the same words, wider.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="email">← The email</button><button data-go="t1">Next: Tier 1 on a phone →</button></div>
+  </section>
+
+  <!-- ============ 11 TIER 1 ============ -->
+  <section class="screen" id="s-t1">
+    <div class="screen-head"><h1>Tier 1 · Owner-operator, on a phone</h1><span class="who">Mike · HVAC · 14 questions, one per screen · two shown</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>One question per screen, big type, a mic hint. The trade-off: no overview of what’s coming. Right call for a phone?</li>
+      <li>Tier 1 asks about <i>yesterday</i>, not “workflows.” The examples are one sentence, from Ray, a two-truck owner. Is Ray believable?</li>
+      <li>Is fourteen the right count? (The full list is in the plan.)</li>
+    </ul></details>
+    <div class="phones">
+      <div>
+        <div class="phone"><div class="notch"></div><div class="sc wk ph1" style="padding-top:48px">
+          <div class="top"><b>Delgado Heating &amp; Cooling</b><span>4 of 14 · 3 min so far</span></div>
+          <div class="track" style="margin-bottom:16px"><i style="width:28%"></i></div>
+          <span class="q-label">Walk me through yesterday. First call of the morning to the last thing you did before you quit.</span>
+          <p class="q-help">Just what happened. Don’t tidy it up.</p>
+          <div class="ex"><b>Example — Ray, two trucks</b>“6:40, dispatched Luis to the no-cool on Elm from my truck. 8:15 the customer called asking where he was — I’d told her 8 and forgot to tell Luis. Quoted a condenser at lunch off my phone, then typed it again into QuickBooks that night.”</div>
+          <textarea placeholder="Yesterday I…"></textarea>
+          <div class="mic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg> Tap the microphone on your keyboard and just talk.</div>
+          <div class="foot"><button class="btn">Back</button><button class="btn pri" data-go="t1">Next</button></div>
+        </div></div>
+        <div class="phone-cap">Question 4 of 14</div>
+      </div>
+      <div>
+        <div class="phone"><div class="notch"></div><div class="sc wk ph1" style="padding-top:48px">
+          <div class="top"><b>Delgado Heating &amp; Cooling</b><span>7 of 14 · 6 min so far</span></div>
+          <div class="track" style="margin-bottom:16px"><i style="width:50%"></i></div>
+          <span class="q-label">What did you type twice this week?</span>
+          <p class="q-help">Same information, two places. A text and an invoice. A notepad and QuickBooks. The dispatch board and the customer’s file.</p>
+          <div class="ex"><b>Example — Ray, two trucks</b>“Every estimate. Once in the text to the customer, once in QuickBooks. And the maintenance-agreement renewals — I keep those in a notebook in the truck and re-type the ones that pay into the computer.”</div>
+          <div class="callout ask" style="margin:0 0 8px;padding:8px 12px;font-size:14px"><span class="eyebrow" style="font-size:11px;margin-bottom:2px">Brad asked especially</span>Tell me about the maintenance-agreement renewals you mentioned on the phone.</div>
+          <textarea placeholder="This week I typed…" style="min-height:110px"></textarea>
+          <div class="foot"><button class="btn">Back</button><button class="btn pri" data-go="done">Next</button></div>
+        </div></div>
+        <div class="phone-cap">Question 7 of 14 · with one of your “ask especially about” prompts</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="welcome">← Welcome page</button><button data-go="t2">Next: Tier 2 →</button></div>
+  </section>
+
+  <!-- ============ 12 TIER 2 ============ -->
+  <section class="screen" id="s-t2">
+    <div class="screen-head"><h1>Tier 2 · The office</h1><span class="who">Renee Alvarez · office manager, Kessler &amp; Pratt CPAs · the 1.0.1 worksheet re-voiced for an accounting practice</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>This is today’s worksheet with the vocabulary, checkbox lists, prompts and examples swapped in from the accounting pack. Is the re-voicing enough, or should some parts reorder per trade?</li>
+      <li>The persona is Joanne, office manager at a six-person firm. Would a CPA’s office manager recognize her?</li>
+      <li>Your “ask especially about” prompt appears inside the pain inventory, in your words, marked as yours.</li>
+    </ul></details>
+    <div class="browser"><div class="addr"><div class="dots"><i></i><i></i><i></i></div><div class="url"><b>clearpathlabs.dev</b>/discovery/x2rq-8mnv-b41c</div></div>
+      <div class="wk">
+        <div class="wbar"><span class="t">Where the Time Goes</span><div class="track"><i style="width:31%"></i></div><span>16 of 52</span><span class="pill">9 min</span><span class="pill ok">Saved</span></div>
+        <div class="wrap">
+          <div class="q" style="margin-bottom:22px">
+            <span class="q-label">What systems and tools do you touch in a normal week?</span>
+            <p class="q-help">Tap everything you use, then add anything missing. Name the actual products.</p>
+            <div class="chips"><span class="on">QuickBooks Online</span><span>Xero</span><span class="on">Drake Tax</span><span>Lacerte</span><span>UltraTax</span><span>ProSeries</span><span class="on">TaxDome</span><span>Karbon</span><span>Canopy</span><span class="on">SmartVault</span><span>Bill.com</span><span class="on">Gusto</span><span class="on">Outlook</span><span class="on">Excel</span><span>Paper files</span><span>Other…</span></div>
+          </div>
+          <div class="part-head"><span class="part-num">Part 2</span><h2 style="font-size:26px">The pain inventory</h2><span class="part-min">about 8 min</span></div>
+          <p class="intro">This is the most important part. List up to ten things from your last two working weeks that were slow, repetitive, error-prone, or just annoying. One per row. One specific occasion each — what actually happened, not what usually happens.</p>
+          <div class="callout ask"><span class="eyebrow">Brad asked especially</span>Tell me about the client-document chasing before the March deadline — you said it was “half of February.”</div>
+          <div class="callout tips"><span class="eyebrow">If you get stuck</span><ul>
+            <li>What did you chase a client for this week — a bank statement, a 1099, a signature on the engagement letter?</li>
+            <li>What did you re-key from a PDF into the tax software because the import didn’t take?</li>
+            <li>What question did you answer on the phone ten times in March?</li>
+            <li>What do you keep in your own spreadsheet because TaxDome (or whatever you use) doesn’t hold it?</li>
+            <li>What did you apologize to a client or a partner for last month?</li>
+          </ul></div>
+          <div class="tbl"><table>
+            <thead><tr><th>#</th><th style="width:48%">What happened, concretely (one occasion)</th><th>How often</th><th>Time lost each time</th><th>Who else is affected</th></tr></thead>
+            <tbody>
+              <tr><td class="n">1</td><td>Last Tuesday I sent the third reminder to a client for their Q2 bank statements — by hand, from a sticky note on my monitor, because there’s no list of who still owes what.</td><td>Every week</td><td>1 hr</td><td>Two preparers waiting on it</td></tr>
+              <tr><td class="n">2</td><td>Re-keyed 22 W-2 amounts from scanned PDFs into Drake because the import fails on photos of forms.</td><td>Daily in season</td><td>40 min</td><td>Me; the preparer who checks it</td></tr>
+              <tr><td class="n">3</td><td class="ph">Last Thursday I…</td><td class="ph">weekly, every client…</td><td class="ph">45 min, 2 hrs…</td><td class="ph">the partners, a preparer…</td></tr>
+            </tbody>
+          </table></div>
+          <div class="ex" style="margin-top:12px"><b>Example — Joanne, office manager at a six-person CPA firm</b>
+            <div class="r"><b style="display:inline;letter-spacing:0;text-transform:none;font-size:14.5px">3.</b> “March 14th I answered ‘is my return done?’ fourteen times before lunch. Every answer meant opening TaxDome, finding the client, reading the status, and calling back.” <i>· Daily in season · ~2 hrs · The partners get the overflow calls</i></div>
+            <div class="r"><b style="display:inline;letter-spacing:0;text-transform:none;font-size:14.5px">6.</b> “Sent 31 engagement letters in January from a Word template, changing the name and the fee by hand. Two went out with last year’s fee.” <i>· Once a year, all at once · 3 hrs · The partner who signs them</i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="t1">← Tier 1</button><button data-go="t3">Next: Tier 3 →</button></div>
+  </section>
+
+  <!-- ============ 13 TIER 3 ============ -->
+  <section class="screen" id="s-t3">
+    <div class="screen-head"><h1>Tier 3 · The organization</h1><span class="who">Tom Brennan · Director of Operations, Meridian Mechanical · sitting 2 of 2</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>Two sittings of ~30 minutes, with a sitting nav on the left. The alternative is one long page. Which?</li>
+      <li>Sitting 2 adds what corporate users can answer and owner-operators can’t: systems and data, stakeholders, constraints, metrics with baselines, attachments. Too much? Not enough?</li>
+      <li>The pain inventory stays in sitting 1 even at this tier — corporate users over-specify the solution. Agree?</li>
+    </ul></details>
+    <div class="browser"><div class="addr"><div class="dots"><i></i><i></i><i></i></div><div class="url"><b>clearpathlabs.dev</b>/discovery/m8vd-2kpq-r7ta</div></div>
+      <div class="wk">
+        <div class="wbar"><span class="t">Where the Time Goes</span><div class="track"><i style="width:58%"></i></div><span>Part 8 of 10</span><span class="pill">sitting 2 · 14 min</span><span class="pill ok">Saved</span></div>
+        <div class="wrap" style="max-width:980px">
+          <div class="sit">
+            <nav class="sitnav">
+              <div class="s"><b>Sitting 1</b><small>Parts 1–5 · done Fri, 34 min</small><ol><li class="done">You and your work</li><li class="done">The pain inventory</li><li class="done">Spreadsheets and workarounds</li><li class="done">Pick one, and dig</li><li class="done">Walk me through it</li></ol></div>
+              <div class="s on"><b>Sitting 2</b><small>Parts 6–10 · about 30 min</small><ol start="6"><li class="done">Fit and guardrails</li><li class="done">What better looks like</li><li class="now">Systems and data</li><li>People and constraints</li><li>Success, and attachments</li></ol></div>
+            </nav>
+            <div>
+              <div class="part-head" style="margin-top:0"><span class="part-num">Part 8</span><h2 style="font-size:26px">Systems and data</h2><span class="part-min">about 8 min</span></div>
+              <p class="intro">Every system that touches your #1 problem. Be literal about who owns it and whether a first version could get away with only reading from it.</p>
+              <div class="q">
+                <span class="q-label">The systems inventory</span>
+                <p class="q-help">One row per system, including the spreadsheets. “Owner” is the person who’d have to say yes to anything touching it.</p>
+                <div class="tbl"><table>
+                  <thead><tr><th>System</th><th>What it holds</th><th>Who owns it</th><th>Read only, or write?</th><th>How data gets out</th></tr></thead>
+                  <tbody>
+                    <tr><td>ServiceTitan</td><td>Jobs, dispatch, invoices, tech notes, all three branches</td><td>Me</td><td>Read only for now</td><td>Nightly CSV export; API available, IT hasn’t approved</td></tr>
+                    <tr><td>Sage Intacct</td><td>GL, AP, branch P&amp;L</td><td>Karen (controller)</td><td>Read only — she’d never allow writes</td><td>CSV from a saved report</td></tr>
+                    <tr><td>“Branch KPI rollup.xlsx”</td><td>Weekly revenue, callbacks, agreement renewals per branch — typed in by three branch managers</td><td>Me. It is the problem.</td><td>—</td><td>It’s an Excel file on SharePoint</td></tr>
+                    <tr><td>Fleetio</td><td>Trucks, mileage, maintenance</td><td>Darnell (fleet)</td><td>Read</td><td>CSV</td></tr>
+                    <tr><td class="ph">Add a row…</td><td></td><td></td><td></td><td></td></tr>
+                  </tbody>
+                </table></div>
+              </div>
+              <div class="q">
+                <span class="q-label">Where does the same number exist in more than one place — and which copy do people believe?</span>
+                <p class="q-help">This is usually where the pain lives at your size.</p>
+                <textarea>Callback rate. ServiceTitan can calculate it; the branch managers calculate their own in the rollup sheet, differently, and the rollup is what goes to the owner every Monday. Nobody believes either number, so we argue about it instead of fixing it.</textarea>
+              </div>
+              <div class="q">
+                <span class="q-label">Attachments that would save us both a week</span>
+                <p class="q-help">Redact customer names. Exports from last month are ideal — old enough to be safe, recent enough to be real.</p>
+                <div class="drop">Drop files here or tap to choose<br><span class="file">ServiceTitan_jobs_Aug_redacted.csv</span><span class="file">Branch KPI rollup.xlsx</span><span class="file">+ add</span></div>
+              </div>
+              <div class="stmt">Your answers and files are confidential to ClearPath Labs and used only to scope work for Meridian Mechanical. If your organization needs an NDA before sitting 2, stop here and email brad@clearpathlabs.dev — a signed one comes back the same day.</div>
+              <div style="display:flex;justify-content:space-between;margin-top:18px"><button class="btn">← Part 7</button><button class="btn pri" data-go="done">Save and continue to Part 9 →</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="t2">← Tier 2</button><button data-go="done">Next: Done page →</button></div>
+  </section>
+
+  <!-- ============ 14 DONE ============ -->
+  <section class="screen" id="s-done">
+    <div class="screen-head"><h1>Done page</h1><span class="who">After Submit · Tom, Tuesday afternoon</span></div>
+    <details class="decide" open><summary>Decisions on this screen</summary><ul>
+      <li>A date, not “soon.” The app computes two business days and you get the reminder. Is two days the right promise?</li>
+      <li>“Email me a copy” sends them their own answers. Yes?</li>
+      <li>This is where the loop closes for the customer. Anything you’d add — a calendar link for the follow-up call?</li>
+    </ul></details>
+    <div class="browser"><div class="addr"><div class="dots"><i></i><i></i><i></i></div><div class="url"><b>clearpathlabs.dev</b>/discovery/m8vd-2kpq-r7ta/done</div></div>
+      <div class="wk"><div class="wrap" style="padding:44px 22px 50px;max-width:680px">
+        <span class="eyebrow">Meridian Mechanical · submitted</span>
+        <h1 style="font-size:34px;margin:8px 0 14px">Thanks, Tom. Brad has your answers.</h1>
+        <p class="lede">Fifty-four questions, two sittings, 61 minutes. That’s a real picture of three branches, and it’s the most useful thing you could have given me.</p>
+        <div style="border:1px solid var(--w-line);border-radius:8px;background:var(--w-paper);padding:16px 18px;margin:18px 0">
+          <b style="font-family:var(--f-disp);font-size:18px">What happens now</b>
+          <ol style="margin:8px 0 0;padding-left:20px;display:grid;gap:6px">
+            <li>I read everything, including the two files, by <b>Thursday, September 11</b>.</li>
+            <li>You get a one-page “what I heard” — the problem in your words, and the two or three things we could build first, with what each would take.</li>
+            <li>We spend thirty minutes picking one. I’ll send a few times.</li>
+          </ol>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Email me a copy of my answers</button><button class="btn link">Add the branch manager as a second respondent</button></div>
+        <div class="stmt">Only Brad sees your answers. They’re stored securely and deleted if you ask. Questions any time: brad@clearpathlabs.dev · (609) 555-0148.</div>
+      </div></div>
+    </div>
+    <div class="pager"><button data-go="t3">← Tier 3</button><button data-go="home">Back to the start ↺</button></div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  const order = ["home","who","what","note","preview","status","response","library","email","welcome","t1","t2","t3","done"];
+  const navs = [...document.querySelectorAll(".rail .nav")];
+  function show(id){
+    if(!order.includes(id)) id = "home";
+    document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === "s-" + id));
+    navs.forEach(b => b.classList.toggle("on", b.dataset.go === id));
+    if(location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+    document.querySelector(".stage").scrollTop = 0; window.scrollTo({top:0});
+  }
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-go]"); if(!t) return;
+    e.preventDefault(); show(t.dataset.go);
+  });
+  document.addEventListener("keydown", e => {
+    if(e.target.matches("input,textarea,select")) return;
+    const i = order.indexOf((location.hash || "#home").slice(1));
+    if(e.key === "ArrowRight" && i < order.length - 1) show(order[i + 1]);
+    if(e.key === "ArrowLeft" && i > 0) show(order[i - 1]);
+  });
+  window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+  show((location.hash || "#home").slice(1));
+
+  // tier suggestion on the What screen
+  const tg = [...document.querySelectorAll(".tg")], cards = [...document.querySelectorAll(".tier-card")];
+  function suggest(){
+    const n = tg.filter(c => c.checked).length;
+    const t = n === 0 ? 1 : n === 3 ? 3 : 2;
+    cards.forEach(c => { const on = Number(c.dataset.t) === t; c.classList.toggle("sel", on); c.querySelector(".sug").hidden = !on; });
+  }
+  tg.forEach(c => c.addEventListener("change", suggest));
+  cards.forEach(c => c.addEventListener("click", () => { cards.forEach(x => x.classList.remove("sel")); c.classList.add("sel"); }));
+
+  // trade switch / family select (visual only)
+  document.querySelectorAll(".fam").forEach(f => f.addEventListener("click", () => { document.querySelectorAll(".fam").forEach(x => x.classList.remove("sel")); f.classList.add("sel"); }));
+  document.querySelectorAll(".sw span").forEach(s => s.addEventListener("click", e => { e.stopPropagation(); s.parentElement.querySelectorAll("span").forEach(x => x.classList.remove("on")); s.classList.add("on"); }));
+
+  // plan link (filled in when the plan artifact URL is known)
+  const PLAN_URL = "https://claude.ai/code/artifact/2c94d3ac-4793-4f70-b9b6-4f77f14a4572";
+  const pl = document.getElementById("planLink");
+  if(PLAN_URL && !PLAN_URL.startsWith("__")){ pl.href = PLAN_URL; pl.hidden = false; pl.target = "_blank"; }
+})();
+</script>

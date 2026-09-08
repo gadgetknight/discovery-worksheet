@@ -1,5 +1,11 @@
 # CLAUDE.md — discovery-worksheet
 
+**Version:** 1.1.0 — 2026-09-08
+
+### Changelog
+- **1.1.0 (2026-09-08)** — The project is growing into the Discovery intake platform. Added `DISCOVERY_PLATFORM_PLAN.md` (the proposal: composed worksheets = spine + tier profile + vertical pack; three tiers by business structure; built inside CRM_platform; three packs first) and `prototype/discovery-prototype.html` (14 clickable screens). Both published as artifacts. Five decisions pending Brad — see the plan.
+- **1.0.0 (2026-09-08)** — File created with the 1.0.0 worksheet.
+
 ## What this project is
 
 A customer-facing discovery questionnaire, "Where the Time Goes", for Brad's AI
@@ -13,6 +19,10 @@ at Sandy Cove Ministries (a retreat and conference center, North East MD), and t
 examples use a fictional retreat-center persona ("Dana") for her benefit. The next
 customer will be in a different industry. Change `CONFIG.exampleWho` and the `example`
 strings in `SCHEMA` when the worksheet goes to someone else.
+
+## Where this is going
+
+Read `DISCOVERY_PLATFORM_PLAN.md` before proposing anything bigger than a wording fix. The short version: worksheets get *composed* from one spine, three tier profiles and one vertical pack per trade family — never written as separate documents per tier. The app itself is planned to live inside `C:\Projects\CRM_platform` (its own PRD, not smuggled into the CRM's), with the customer-facing link at `clearpathlabs.dev/discovery/<token>`. Until that exists, this folder holds the library content and the static worksheet.
 
 ## Rules for this folder
 

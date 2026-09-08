@@ -1,6 +1,6 @@
 # discovery-worksheet — "Where the Time Goes"
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Written:** 2026-09-08
 **Live:** https://discovery-worksheet.vercel.app (Vercel team `Clearpath`, project `discovery-worksheet`, production)
 
@@ -13,6 +13,8 @@ inside use a fictional retreat-center persona, "Dana", because she is the first 
 
 ## Files
 
+- `DISCOVERY_PLATFORM_PLAN.md` — the proposal for the intake platform this grows into (library of vertical packs, three tiers, send screen inside the CRM). Read it first.
+- `prototype/discovery-prototype.html` — fourteen clickable screens of that platform, both sides, with the decision each screen asks. Open in a browser; nothing sends.
 - `index.html` — the whole thing. Two blocks at the top of the `<script>` are the only
   places you should need to edit:
   - `CONFIG` — consultant name and email, the example persona, and an optional
@@ -52,5 +54,6 @@ page falls back to Georgia and the system sans.
 
 ## Changelog
 
+- **1.1.0 — 2026-09-08** — Platform plan and clickable prototype added. Worksheet unchanged (1.0.1).
 - **1.0.1 — 2026-09-08** — Fix: “Review & send” section was pinned to the left edge; masthead side padding restored so it aligns with the parts below.
 - **1.0.0 — 2026-09-08** — First release. Deployed to Vercel the same day.
