@@ -1,8 +1,9 @@
 # CLAUDE.md — discovery-worksheet
 
-**Version:** 1.1.0 — 2026-09-08
+**Version:** 1.2.0 — 2026-09-08
 
 ### Changelog
+- **1.2.0 (2026-09-08)** — Brad decided: inside CRM_platform; five packs first (field-service trades, accounting practices, small law firms, venues, nonprofits & churches); Resend as sender (already verified on clearpathlabs.dev per the ClearPath site's CHANGELOG 0.8.0); customer never sees a tier; interview mode yes. Plan is 1.1.0.
 - **1.1.0 (2026-09-08)** — The project is growing into the Discovery intake platform. Added `DISCOVERY_PLATFORM_PLAN.md` (the proposal: composed worksheets = spine + tier profile + vertical pack; three tiers by business structure; built inside CRM_platform; three packs first) and `prototype/discovery-prototype.html` (14 clickable screens). Both published as artifacts. Five decisions pending Brad — see the plan.
 - **1.0.0 (2026-09-08)** — File created with the 1.0.0 worksheet.
 

@@ -1,14 +1,15 @@
 # Discovery — the intake platform for ClearPath Labs
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Written:** 2026-09-08
-**Status:** Proposal, for Brad's decision. Nothing here is built yet except the 1.0.1 worksheet.
+**Status:** Decided. Brad answered the five decisions on 2026-09-08 (see "Decisions" at the end). Phase 1 can start.
 **Companion:** the clickable prototype (published as an artifact; source in `prototype/`)
 
 ---
 
 ## Changelog
 
+- **1.1.0 — 2026-09-08** — Brad's five decisions recorded: inside CRM_platform; five packs first (field-service trades, accounting practices, small law firms, venues, nonprofits & churches); the customer never sees a tier; interview mode yes. Sender section rewritten from verified facts: Resend is already set up on `clearpathlabs.dev` (ClearPath site CHANGELOG 0.8.0, DNS checked live today), so the app's sending is solved; the open problem is the *mailbox* — Google Workspace MX/SPF/DKIM are published for the domain but Brad's test sends fail; cause not yet verified.
 - **1.0.0 — 2026-09-08** — First plan, written from Brad's description of the product and a read of what already exists in `C:\Projects` (CRM_platform, ClearPath Labs site, the 1.0.1 worksheet).
 
 ---
@@ -134,7 +135,11 @@ After that: a status line per send (Sent → Opened → Started 40% → Submitte
 - ClearPath Labs site: Next.js, `/start/[slug]` is a pre-sale questionnaire that posts leads into the CRM. Discovery is post-sale and separate from it.
 - Vercel: `crm-platform` and `clearpath-labs` both under team Clearpath. `discovery-worksheet` (the 1.0.1 static page) is a third.
 
-**Assumed, to confirm:** which mailbox and provider send email. Command Center sends campaigns, so a sending path exists; the CRM has none. Discovery needs a transactional sender from a ClearPath address. Decision below.
+**Email — verified 2026-09-08, after Brad's decision:**
+
+- **Sending is already solved.** The ClearPath Labs site moved to **Resend** on 2026-08-14 (its CHANGELOG 0.8.0): `clearpathlabs.dev` is a verified sending domain in Resend (us-east-1), with `resend._domainkey` DKIM, the `send` return-path MX/SPF, and DMARC `p=none`, all in **Vercel's DNS** (Vercel is the authoritative nameserver). The site sends from `brad@clearpathlabs.dev` with `RESEND_API_KEY` in its environment. Discovery reuses the same Resend domain and key inside the CRM — no new provider, and any address at the domain can be the `from` (`brad@`, `discovery@`, `support@`) without a mailbox existing.
+- **Receiving is the open problem.** Live DNS today: MX `1 smtp.google.com`, SPF `include:_spf.google.com`, a `google._domainkey` DKIM key — the complete Google Workspace mail setup, and `NAP.md` names "the ClearPath Labs Google Workspace" with `brad@clearpathlabs.dev` as owner. So the domain is routed to Workspace. Brad reports every test send fails; the exact test and error are not yet known, so the cause is unverified. Until it works, Discovery emails set `reply_to` to an address that does receive — exactly what the site already does with `EMAIL_REPLY_TO`.
+- **More addresses (`demo@`, `support@`)**: on Workspace these are free as *aliases* on the one paid user or as *groups*, not extra paid users. Resend can send as any of them once the domain is verified, which it is.
 
 **What gets built:**
 
@@ -155,7 +160,7 @@ After that: a status line per send (Sent → Opened → Started 40% → Submitte
 | Phase | Ships | You do | Size |
 |---|---|---|---|
 | **0 — now** | This plan and the prototype | Decide the five questions below | done |
-| **1 — the library** | Composer, spine, three tier profiles, packs for field-service trades, accounting practices, small law firms. Output is a static page per (pack, tier) — sendable by hand the day it's done, no app required. | Review each pack (~30 min each). Pick the sender mailbox. | ~4 sessions |
+| **1 — the library** | Composer, spine, three tier profiles, packs for field-service trades, accounting practices, small law firms, venues, nonprofits & churches. Output is a static page per (pack, tier) — sendable by hand the day it's done, no app required. | Review each pack (~30 min each). | ~6 sessions |
 | **2 — the link** | `/d/[token]`, server autosave, submit, notification to you, read-only response view in the CRM, export | Approve the migration; set env vars | ~2 sessions |
 | **3 — the send screen** | Who / What / Note / Preview flow from a lead, tier helper, email send, status, resend, reminder, interview mode | Email provider account and key | ~2–3 sessions |
 | **4 — the loop** | "What I heard" and build-brief drafts, Tier 3 multi-respondent and attachments, `clearpathlabs.dev/discovery` rewrite, contractors and venues packs | Edit and send the first real one-pager | ~2–3 sessions |
@@ -163,13 +168,13 @@ After that: a status line per send (Sent → Opened → Started 40% → Submitte
 
 Phase 1 is deliberately useful on its own: the day the trades pack is reviewed you can send an HVAC worksheet by hand, the way you'll send your daughter's. The app is built around a library that already works, not the other way round.
 
-## Decisions I need from you
+## Decisions — answered by Brad, 2026-09-08
 
-1. **Home** — inside CRM_platform (my recommendation) or a separate app?
-2. **First three packs** — field-service trades, accounting practices, small law (my recommendation), or reorder to match your pipeline?
-3. **Sender** — which mailbox sends discovery emails, and are you fine with a transactional provider (Resend or the one Command Center uses)?
-4. **Tier visibility** — confirm the customer never sees a tier label.
-5. **Interview mode** — yes or no? It changes how Tier 1 questions are written, so it has to be decided before the packs.
+1. **Home** — **inside CRM_platform.**
+2. **First packs** — **five**: field-service trades, accounting practices, small law firms, **plus venues and nonprofits & churches.** Contractors moves to sixth. Phase 1 grows from ~4 sessions to ~6.
+3. **Sender** — **Resend** (already verified on the domain — see Architecture). Brad wants real mailboxes on `clearpathlabs.dev` (`brad@`, `demo@`, `support@`); the Workspace mailbox is not yet working and is tracked as an infrastructure item, not a Discovery blocker.
+4. **Tier visibility** — **the customer never sees a tier.**
+5. **Interview mode** — **yes.** Tier 1 questions are written to be said out loud.
 
 ## Risks, honestly
 
