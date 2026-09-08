@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
   Where the Time Goes — discovery worksheet
-  Version 1.0.0 — 2026-09-08
+  Version 1.0.1 — 2026-09-08
 
   CHANGELOG
+  1.0.1  2026-09-08  Fix: "Review & send" section was pinned to the left edge
+                     (.finish margin shorthand overrode the centering margin);
+                     masthead was missing its side padding so it sat 20px left
+                     of the parts below it.
   1.0.0  2026-09-08  First release. Eight parts, autosave, review & send panel,
                      optional POST endpoint, print view. Adapted from the
                      Outskill "What Problem to Solve" learner worksheet.
@@ -99,7 +103,7 @@
   }
 
   /* ---------- masthead ---------- */
-  .mast{padding:44px 0 26px}
+  .mast{padding:44px 20px 26px}
   .mast .lede{font-size:20px; color:var(--ink-2); margin:14px 0 0; max-width:60ch}
   .howto{
     margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:14px;
@@ -233,7 +237,7 @@
   details.ex .ex-body .exrow .m{color:var(--ink-2)}
 
   /* footer / actions */
-  .finish{margin:44px 0 0; padding:28px 0 60px; border-top:3px solid var(--accent)}
+  .finish{margin:44px auto 0; padding:28px 20px 60px; border-top:3px solid var(--accent)}
   .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
   button{font:inherit; cursor:pointer; border-radius:var(--radius); padding:10px 16px; border:1px solid var(--line-2); background:var(--paper); color:var(--ink); font-weight:600; font-size:16px}
   button:hover{border-color:var(--accent); color:var(--accent-ink)}
@@ -998,7 +1002,7 @@ const SCHEMA = [
   function toJSON(){
     const answers = {}, labels = {};
     SCHEMA.forEach(s => s.questions.forEach(q => { if(q.type === "note") return; answers[q.id] = get(q.id) ?? null; labels[q.id] = q.label; }));
-    return JSON.stringify({title:CONFIG.title, version:"1.0.0", exportedAt:new Date().toISOString(), startedAt:meta.startedAt ? new Date(meta.startedAt).toISOString() : null, elapsedMinutes:elapsedMin(), answers, labels}, null, 2);
+    return JSON.stringify({title:CONFIG.title, version:"1.0.1", exportedAt:new Date().toISOString(), startedAt:meta.startedAt ? new Date(meta.startedAt).toISOString() : null, elapsedMinutes:elapsedMin(), answers, labels}, null, 2);
   }
   function toPrintHTML(){
     return blocks().map(b => {

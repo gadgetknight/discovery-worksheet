@@ -1,6 +1,6 @@
 # discovery-worksheet — "Where the Time Goes"
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Written:** 2026-09-08
 **Live:** https://discovery-worksheet.vercel.app (Vercel team `Clearpath`, project `discovery-worksheet`, production)
 
@@ -52,4 +52,5 @@ page falls back to Georgia and the system sans.
 
 ## Changelog
 
+- **1.0.1 — 2026-09-08** — Fix: “Review & send” section was pinned to the left edge; masthead side padding restored so it aligns with the parts below.
 - **1.0.0 — 2026-09-08** — First release. Deployed to Vercel the same day.
