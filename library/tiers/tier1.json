@@ -1,0 +1,25 @@
+{
+  "id": 1,
+  "key": "t1",
+  "name": "Owner-operator",
+  "mode": "stepper",
+  "minutesLabel": "about 12 minutes",
+  "interviewMinutesLabel": "a 20-minute call",
+  "parts": ["p1", "p2", "p4", "p7", "pf"],
+  "sittings": null,
+  "masthead": {
+    "eyebrow": "{company} · about 12 minutes",
+    "greeting": "Hi {name} — {consultantFirst} here.",
+    "lede": "Fourteen questions about where your week goes, in your own words. Nothing technical. Talk into your phone if that’s easier — tap the microphone on your keyboard. Your answers save as you go, so stop whenever; the link brings you back.",
+    "howto": [
+      "One question at a time. Tap Next when you’re done with each.",
+      "Tell me what actually happened — “last Tuesday” beats “usually.”",
+      "Don’t worry about fixes. That’s my job. Just tell me what eats the day."
+    ],
+    "rules": [],
+    "after": "When you’re done, I read it within two business days and send you one page: what I heard, and the two or three things we could build first.",
+    "callOption": "I’d rather do this on a call with {consultantFirst}"
+  },
+  "finishText": "That’s all fourteen. Nothing has been sent yet — the button below turns your answers into a plain text note you can send to {consultantFirst}, or just tap Print. Either way, you’ll hear back within two business days.",
+  "exampleOpenByDefault": true
+}

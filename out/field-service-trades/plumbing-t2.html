@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Discovery worksheet engine — template
+  Version 1.1.1 — 2026-09-08
+  This file is the renderer. compose/build.mjs injects a composed CONFIG and
+  SCHEMA (spine + tier profile + vertical pack) at the two placeholders below
+  and writes a finished worksheet to out/. Do not hand-edit generated files;
+  edit the library or this template and rebuild.
+
+  CHANGELOG
+  1.1.1  2026-09-08  Fix: literal newline in the call-option mailto body broke
+                     the whole script (Tier 1 never started). Stepper now hides
+                     the questions until Start and collapses the masthead once
+                     started, so each question gets the screen to itself.
+  1.1.0  2026-09-08  Template extracted from the 1.0.1 generic worksheet.
+                     Adds: masthead rendered from the tier profile; ?name=&co=
+                     personalization; stepper mode (one question per screen)
+                     for Tier 1; sittings for Tier 3; ?interview=1 mode;
+                     pack/tier/trade metadata in the exports.
+-->
+<title>Where the Time Goes · Plumbing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root{
+    --bg:#F4F6F8; --paper:#FFFFFF;
+    --ink:#1C2430; --ink-2:#4A5563; --ink-3:#7B8794;
+    --line:#DCE2E8; --line-2:#C3CCD6;
+    --accent:#1D5C86; --accent-ink:#154A6D; --accent-tint:#E8F0F7; --accent-tint-2:#D2E1EE;
+    --sand:#F7F2E8; --sand-ink:#6F5426; --sand-line:#E6DAC2;
+    --ok:#2A7A4B; --ok-tint:#E3F2E9;
+    --warn:#A86A0B; --warn-tint:#FBF1DC;
+    --bad:#A83A3A; --bad-tint:#F8E5E5;
+    --radius:6px;
+    --font-display:"Zilla Slab", Georgia, "Times New Roman", serif;
+    --font-body:"Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --measure:68ch;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:17px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--font-display); line-height:1.15; margin:0; text-wrap:balance; letter-spacing:-.005em}
+  h1{font-size:clamp(34px,5vw,46px); font-weight:700}
+  h2{font-size:clamp(25px,3.4vw,30px); font-weight:600}
+  h3{font-size:20px; font-weight:600}
+  p{margin:0 0 12px; max-width:var(--measure)}
+  a{color:var(--accent)}
+  .eyebrow{font-size:12.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--accent)}
+  .muted{color:var(--ink-2)}
+  .small{font-size:15px}
+  .wrap{max-width:860px; margin:0 auto; padding:0 20px}
+
+  /* ---------- sticky bar ---------- */
+  .bar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .bar-in{display:flex; align-items:center; gap:14px; padding:10px 20px; max-width:860px; margin:0 auto}
+  .bar-title{font-family:var(--font-display); font-weight:600; font-size:17px; white-space:nowrap}
+  .prog{flex:1; min-width:60px; display:flex; flex-direction:column; gap:4px}
+  .track{height:6px; background:var(--line); border-radius:3px; overflow:hidden}
+  .fill{height:100%; width:0%; background:var(--accent); border-radius:3px; transition:width .25s ease}
+  .prog-text{font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .prog-text .short{display:none}
+  @media (max-width:640px){ .prog-text .long{display:none} .prog-text .short{display:inline} }
+  .pill{font-size:13px; padding:3px 9px; border-radius:999px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .pill.ok{background:var(--ok-tint); color:var(--ok)}
+  .pill.dim{background:var(--bg); color:var(--ink-2); border:1px solid var(--line)}
+  .pill.busy{background:var(--warn-tint); color:var(--warn)}
+  .bar select{font:inherit; font-size:14px; padding:6px 8px; border:1px solid var(--line-2); border-radius:var(--radius); background:var(--paper); color:var(--ink); max-width:180px}
+  @media (max-width:640px){
+    .bar-title{display:none}
+    .pill.elapsed{display:none}
+    .bar-in{gap:10px; padding:10px 14px}
+    .bar select{max-width:120px}
+  }
+
+  /* ---------- masthead ---------- */
+  .mast{padding:44px 20px 26px}
+  .mast .lede{font-size:20px; color:var(--ink-2); margin:14px 0 0; max-width:60ch}
+  .howto{
+    margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  @media (max-width:700px){ .howto{grid-template-columns:1fr} }
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px 18px}
+  .card .eyebrow{color:var(--ink-3); display:block; margin-bottom:8px}
+  .card ul{margin:0; padding-left:18px}
+  .card li{margin-bottom:6px}
+  .card li:last-child{margin-bottom:0}
+  .rule-card{background:var(--sand); border-color:var(--sand-line)}
+  .rule-card .eyebrow{color:var(--sand-ink)}
+
+  /* ---------- parts ---------- */
+  .part{padding:36px 0 8px; border-top:3px solid var(--accent); margin-top:36px; scroll-margin-top:72px}
+  .part-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:6px}
+  .part-num{font-family:var(--font-display); font-weight:700; color:var(--accent); font-size:14px; letter-spacing:.08em; text-transform:uppercase}
+  .part-min{font-size:13px; color:var(--ink-2); border:1px solid var(--line-2); border-radius:999px; padding:1px 9px; font-variant-numeric:tabular-nums}
+  .part .intro{font-size:18px; color:var(--ink-2); margin:10px 0 22px; max-width:64ch}
+  .callout{border-radius:8px; padding:14px 18px; margin:0 0 22px; max-width:760px}
+  .callout .eyebrow{display:block; margin-bottom:8px}
+  .callout ul{margin:0; padding-left:18px}
+  .callout li{margin-bottom:6px; font-size:16px}
+  .callout li:last-child{margin-bottom:0}
+  .callout.tips{background:var(--sand); border:1px solid var(--sand-line)}
+  .callout.tips .eyebrow{color:var(--sand-ink)}
+  .callout.rule{background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--accent)}
+  .callout.rule .eyebrow{color:var(--accent)}
+  .callout p{margin:0; font-size:16px}
+  .aside{font-style:italic; color:var(--ink-2); margin:0 0 22px; max-width:64ch}
+
+  /* ---------- questions ---------- */
+  .q{margin:0 0 30px; max-width:760px}
+  .q-label{display:block; font-weight:600; font-size:17.5px; margin-bottom:4px; text-wrap:pretty}
+  .q-label .opt{font-weight:400; color:var(--ink-3); font-size:14px; margin-left:6px}
+  .q-help{font-size:15px; color:var(--ink-2); margin:0 0 10px; max-width:var(--measure)}
+  input[type=text], input[type=email], input[type=number], textarea, select{
+    font:inherit; color:var(--ink); background:var(--paper);
+    border:1px solid var(--line-2); border-radius:var(--radius);
+    padding:9px 12px; width:100%;
+  }
+  input[type=number]{width:auto; min-width:110px; font-variant-numeric:tabular-nums}
+  textarea{min-height:92px; resize:vertical; line-height:1.5; display:block; field-sizing:content}
+  textarea.tall{min-height:150px}
+  textarea.short{min-height:60px}
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, .choice:focus-within{
+    outline:2px solid var(--accent); outline-offset:2px; border-color:var(--accent);
+  }
+  ::placeholder{color:var(--ink-3); opacity:1}
+  .unit{margin-left:8px; color:var(--ink-2); font-size:15px}
+  .row-fields{display:flex; flex-wrap:wrap; gap:14px 22px}
+  .row-fields .f{display:flex; flex-direction:column; gap:4px; min-width:150px}
+  .row-fields .f label{font-size:14.5px; color:var(--ink-2)}
+  .row-fields .f .inline{display:flex; align-items:center}
+
+  /* choices */
+  .choices{display:flex; flex-direction:column; gap:6px}
+  .choices.inline{flex-direction:row; flex-wrap:wrap; gap:8px}
+  .choice{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 12px;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    cursor:pointer; font-size:16px; line-height:1.4;
+  }
+  .choice:hover{border-color:var(--line-2)}
+  .choice input{margin:4px 0 0; flex:none; accent-color:var(--accent); width:16px; height:16px}
+  .choice.checked{border-color:var(--accent); background:var(--accent-tint)}
+  .choice .sub{display:block; font-size:14px; color:var(--ink-2)}
+  .other-wrap{margin-top:8px; display:flex; gap:8px; align-items:center}
+  .other-wrap label{font-size:15px; color:var(--ink-2); white-space:nowrap}
+
+  /* scale */
+  .scale{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .scale .choice{padding:8px 0; width:44px; justify-content:center; font-variant-numeric:tabular-nums; font-weight:600}
+  .scale .choice input{position:absolute; opacity:0; width:0; height:0; margin:0}
+  .scale-ends{display:flex; justify-content:space-between; font-size:13px; color:var(--ink-3); max-width:250px; margin-top:4px}
+
+  /* yes/no rows */
+  .yn{display:flex; flex-direction:column; gap:6px}
+  .yn-row{display:flex; align-items:center; gap:12px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:8px 12px; flex-wrap:wrap}
+  .yn-row .t{flex:1; min-width:200px; font-size:16px}
+  .yn-row label{display:flex; align-items:center; gap:6px; font-size:15px; cursor:pointer}
+  .yn-row input{accent-color:var(--accent)}
+
+  /* fill-in sentence */
+  .fill{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px 18px; font-size:18px; line-height:2.1}
+  .fill input{
+    display:inline-block; width:auto; min-width:120px; max-width:100%;
+    padding:2px 8px; margin:0 2px; font-size:17px; line-height:1.5;
+    border:0; border-bottom:2px solid var(--accent-tint-2); border-radius:0; background:var(--accent-tint);
+    field-sizing:content;
+  }
+  .fill input:focus-visible{outline:none; border-bottom-color:var(--accent); background:#fff}
+
+  /* tables */
+  .tbl{border:1px solid var(--line); border-radius:8px; background:var(--paper); overflow:hidden}
+  .tbl-head, .tbl-row{display:grid; gap:0; align-items:stretch}
+  .tbl-head{background:var(--bg); border-bottom:1px solid var(--line); font-size:13.5px; font-weight:600; color:var(--ink-2)}
+  .tbl-head > div{padding:8px 10px; border-right:1px solid var(--line)}
+  .tbl-head > div:last-child, .tbl-row > div:last-child{border-right:0}
+  .tbl-row{border-bottom:1px solid var(--line)}
+  .tbl-row:last-child{border-bottom:0}
+  .tbl-row > div{padding:0; border-right:1px solid var(--line); display:flex}
+  .tbl-row .n{align-items:flex-start; justify-content:center; padding:10px 0; color:var(--ink-3); font-size:14px; font-variant-numeric:tabular-nums; background:var(--bg)}
+  .tbl-row input, .tbl-row textarea{border:0; border-radius:0; width:100%; min-height:44px; background:transparent; padding:9px 10px; font-size:15.5px}
+  .tbl-row textarea{min-height:64px; resize:none}
+  .tbl-row input:focus-visible, .tbl-row textarea:focus-visible{outline-offset:-2px}
+  .tbl-foot{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border-top:1px solid var(--line); background:var(--bg); font-size:14px; color:var(--ink-2)}
+  @media (max-width:720px){
+    .tbl-head{display:none}
+    .tbl-row{grid-template-columns:1fr!important; padding:8px 0}
+    .tbl-row > div{border-right:0; flex-direction:column; padding:2px 10px}
+    .tbl-row > div::before{content:attr(data-label); font-size:13.5px; font-weight:600; color:var(--ink-2); padding:6px 0 0}
+    .tbl-row .n{background:transparent; flex-direction:row; align-items:baseline; gap:5px; justify-content:flex-start; padding:8px 10px 0; font-weight:700; color:var(--accent); font-size:15px}
+    .tbl-row .n::before{content:"Row"; color:var(--accent); padding:0; font-size:15px; font-weight:700}
+    .tbl-row input, .tbl-row textarea{border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; margin:4px 0 6px}
+  }
+
+  /* example disclosure */
+  details.ex{margin-top:10px; border:1px solid var(--accent-tint-2); background:var(--accent-tint); border-radius:8px; max-width:760px}
+  details.ex summary{cursor:pointer; padding:9px 14px; font-size:13.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); list-style:none; display:flex; align-items:center; gap:8px}
+  details.ex summary::-webkit-details-marker{display:none}
+  details.ex summary::before{content:""; width:0; height:0; border-left:6px solid var(--accent-ink); border-top:5px solid transparent; border-bottom:5px solid transparent; transition:transform .15s}
+  details.ex[open] summary::before{transform:rotate(90deg)}
+  details.ex .ex-body{padding:0 16px 14px; font-size:15.5px; color:var(--ink); line-height:1.5}
+  details.ex .ex-body p{margin:0 0 8px; max-width:none}
+  details.ex .ex-body p:last-child{margin-bottom:0}
+  details.ex .ex-body ol, details.ex .ex-body ul{margin:0; padding-left:20px}
+  details.ex .ex-body li{margin-bottom:5px}
+  details.ex .ex-body .exrow{margin-bottom:8px}
+  details.ex .ex-body .exrow b{color:var(--accent-ink)}
+  details.ex .ex-body .exrow .m{color:var(--ink-2)}
+
+  /* footer / actions */
+  .finish{margin:44px auto 0; padding:28px 20px 60px; border-top:3px solid var(--accent)}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
+  button{font:inherit; cursor:pointer; border-radius:var(--radius); padding:10px 16px; border:1px solid var(--line-2); background:var(--paper); color:var(--ink); font-weight:600; font-size:16px}
+  button:hover{border-color:var(--accent); color:var(--accent-ink)}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  button.primary:hover{background:var(--accent-ink); color:#fff}
+  button.danger{color:var(--bad); border-color:var(--bad-tint); background:var(--bad-tint)}
+  button.danger:hover{border-color:var(--bad)}
+  button.link{border:0; background:none; padding:6px 4px; font-weight:400; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px}
+  button.link:hover{color:var(--accent-ink)}
+  .status{font-size:15px; color:var(--ink-2); min-height:1.4em; margin-top:10px}
+  .status.ok{color:var(--ok)}
+  .status.bad{color:var(--bad)}
+
+  /* review overlay */
+  .overlay{position:fixed; inset:0; background:rgba(28,36,48,.55); z-index:50; overflow:auto; padding:3vh 12px}
+  .sheet{max-width:900px; margin:0 auto; background:var(--paper); border-radius:10px; box-shadow:0 18px 50px rgba(0,0,0,.25); display:flex; flex-direction:column; max-height:94vh}
+  .sheet-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:18px 22px 12px; border-bottom:1px solid var(--line)}
+  .sheet-head p{margin:4px 0 0; font-size:15px; color:var(--ink-2)}
+  .sheet-body{padding:14px 22px; overflow:auto; flex:1}
+  .sheet-body textarea{width:100%; min-height:46vh; font-family:ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace; font-size:13.5px; line-height:1.5; field-sizing:fixed; resize:vertical}
+  .sheet-foot{padding:12px 22px 18px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  .sheet-foot .grow{flex:1}
+  .x{border:0; background:none; font-size:26px; line-height:1; padding:2px 8px; color:var(--ink-3)}
+  .x:hover{color:var(--ink)}
+
+  /* ---------- engine additions (1.1.0) ---------- */
+  [hidden]{display:none!important}
+  .hi{font-family:var(--font-display); font-size:26px; font-weight:600; margin:10px 0 0; color:var(--ink); line-height:1.2}
+  .after{margin-top:16px; border:1px solid var(--line); border-radius:8px; padding:12px 16px; background:var(--paper); max-width:66ch; font-size:16px}
+  .banner{margin-top:14px; background:var(--accent); color:#fff; border-radius:8px; padding:10px 14px; font-weight:600; max-width:66ch}
+  .howto.one{grid-template-columns:1fr}
+  .mast-actions{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:18px}
+  #startBtn{font-size:17px; padding:12px 24px}
+  body.stepper .part{border-top:0; padding:0; margin:0}
+  body.stepper .part > :not(.q){display:none}
+  body.stepper .q{display:none; max-width:720px}
+  body.stepper .q.on{display:block}
+  body.stepper .q-label{font-family:var(--font-display); font-size:24px; line-height:1.25; font-weight:600; margin-bottom:6px}
+  body.stepper .q-help{font-size:16px}
+  body.stepper textarea{min-height:160px; font-size:17px}
+  body.stepper .choices .choice{font-size:17px; padding:12px 14px}
+  body.stepper .mast .lede{font-size:18px}
+  body.stepper:not(.started) #app{display:none}
+  body.stepper.started .mast .lede, body.stepper.started .howto, body.stepper.started .after, body.stepper.started .mast-actions{display:none}
+  body.stepper.started .mast{padding-bottom:12px}
+  .stepnav{display:none; align-items:center; gap:12px; max-width:720px; margin:18px 0 40px}
+  body.stepper .stepnav{display:flex}
+  .stepnav .btn2{font:inherit; font-weight:600; border-radius:6px; padding:13px 20px; border:1px solid var(--line-2); background:var(--paper); color:var(--ink); cursor:pointer; min-width:110px}
+  .stepnav .btn2.pri{background:var(--accent); border-color:var(--accent); color:#fff; margin-left:auto}
+  .stepnav .btn2:disabled{opacity:.4; cursor:default}
+  .stepnav .stepcount{color:var(--ink-2); font-variant-numeric:tabular-nums}
+  .sitnav{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px}
+  .sitcard{font:inherit; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; cursor:pointer; display:flex; flex-direction:column; gap:2px}
+  .sitcard b{font-family:var(--font-display); font-size:18px}
+  .sitcard small{color:var(--ink-2)}
+  .sitcard .sitprog{font-size:13px; color:var(--accent-ink); font-variant-numeric:tabular-nums}
+  .sitting-divider{margin-top:44px; border-top:3px solid var(--ink); padding-top:14px}
+  .sitting-divider .eyebrow{color:var(--ink)}
+  .sitting-divider p{color:var(--ink-2); max-width:64ch}
+  @media (max-width:600px){ .sitnav{grid-template-columns:1fr} }
+
+  /* print view */
+  #printview{display:none}
+  @media print{
+    body{background:#fff; font-size:12pt}
+    .bar, .mast, #app, .finish, .overlay{display:none!important}
+    #printview{display:block; max-width:none}
+    #printview h1{font-size:22pt; margin-bottom:4pt}
+    #printview h2{font-size:15pt; margin:18pt 0 8pt; border-top:1.5pt solid #1D5C86; padding-top:8pt; page-break-after:avoid}
+    #printview .pq{font-weight:700; margin:9pt 0 2pt; page-break-after:avoid}
+    #printview .pa{white-space:pre-wrap; margin:0 0 4pt 0; color:#111}
+    #printview .pa.empty{color:#888; font-style:italic}
+    #printview ol{margin:2pt 0 6pt 0}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="bar-title">Where the Time Goes</div>
+    <div class="prog">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="prog-text" id="progText">0 of 0 answered</div>
+    </div>
+    <span class="pill dim elapsed" id="elapsed" title="Time since your first answer">0 min</span>
+    <span class="pill dim" id="saved">Not started</span>
+    <select id="jump" aria-label="Jump to a part"><option value="">Jump to…</option></select>
+  </div>
+</div>
+
+<header class="mast wrap">
+  <span class="eyebrow" id="mastEyebrow"></span>
+  <h1 style="margin-top:8px" id="mastTitle">Where the Time Goes</h1>
+  <p class="hi" id="hi" hidden></p>
+  <p class="lede" id="lede"></p>
+  <div class="howto" id="howto">
+    <div class="card" id="howtoCard"><span class="eyebrow">How this works</span><ul id="howtoList"></ul></div>
+    <div class="card rule-card" id="rulesCard"><span class="eyebrow">Three ground rules</span><ul id="rulesList"></ul></div>
+  </div>
+  <div class="after" id="afterBox" hidden><b>What happens after.</b> <span id="afterText"></span></div>
+  <div class="banner" id="interviewBanner" hidden></div>
+  <div class="mast-actions"><button class="primary" id="startBtn" hidden>Start</button><button class="link" id="callBtn" hidden></button></div>
+</header>
+
+<div class="sitnav wrap" id="sitnav" hidden></div>
+
+<main id="app" class="wrap"></main>
+
+<section class="finish wrap" id="finish">
+  <span class="eyebrow">You’re done</span>
+  <h2 style="margin-top:6px">Review &amp; send</h2>
+  <p class="muted" id="finishText"></p>
+  <div class="actions">
+    <button class="primary" id="btnReview">Review &amp; send my answers</button>
+    <button id="btnPrint">Print / save as PDF</button>
+    <button class="link" id="btnClear">Clear all answers</button>
+  </div>
+  <div class="status" id="finishStatus"></div>
+</section>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <div>
+        <h3 id="sheetTitle">Your answers, ready to send</h3>
+        <p id="sheetSub"></p>
+      </div>
+      <button class="x" id="btnClose" aria-label="Close">×</button>
+    </div>
+    <div class="sheet-body">
+      <textarea id="exportText" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="sheet-foot">
+      <button class="primary" id="btnCopy">Copy to clipboard</button>
+      <button id="btnEmail">Open an email</button>
+      <button id="btnDlMd">Download .md</button>
+      <button id="btnDlJson">Download .json</button>
+      <button id="btnSend" hidden>Send</button>
+      <span class="grow"></span>
+      <span class="status" id="sheetStatus"></span>
+    </div>
+  </div>
+</div>
+
+<div id="printview"></div>
+
+<script>
+const CONFIG = {"title":"Where the Time Goes","consultantFirst":"Brad","consultantName":"Brad Coulter","consultantEmail":"brad@clearpathlabs.dev","minutes":"20–30 minutes","submitUrl":"","storageKey":"wtg-field-service-trades-plumbing-t2","exampleWho":"Carla, office manager and dispatcher at a 12-tech HVAC and plumbing company","persona":{"name":"Carla","role":"office manager and dispatcher at a 12-tech HVAC and plumbing company","situation":"Housecall Pro, QuickBooks, and four spreadsheets of her own."},"mode":"scroll","sittings":null,"masthead":{"eyebrow":"Discovery worksheet · 20–30 minutes","greeting":"Hi {name} — {consultantFirst} here.","lede":"You know your work better than anyone. This worksheet helps you lay out what’s slow, repetitive, or error-prone, so that {consultantFirst} can build something that actually helps instead of guessing. There are no wrong answers, and you don’t need to know anything about software.","howto":["<b>Answer in your own words.</b> Specific beats polished. “Last Tuesday” beats “usually.”","<b>Describe problems, not solutions.</b> Figuring out the fix is the builder’s job. You only have to describe what actually happens.","<b>Nothing is graded.</b> A half-answer is more useful than a blank. Questions marked <i>optional</i> can be skipped if you’re short on time.","<b>Your answers save in this browser as you type.</b> Close the tab, come back later, pick up where you left off. (They stay on this device only.)"],"rules":["<b>One occasion, not a pattern.</b> Wherever you can, tell me about a specific time it happened, with a day and a number.","<b>In Parts 2–4, don’t use the words</b> <i>app, software, system, automate, dashboard,</i> or <i>AI.</i> If you catch yourself writing “we need something that…”, stop and write down what happened instead.","<b>Real beats tidy.</b> The messy workaround you’re slightly embarrassed by is usually the most valuable thing on this page."],"after":"When you’re done, {consultantFirst} reads it within two business days and sends you one page: what he heard, and the two or three things worth building first."},"finishText":"Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Empty questions are marked so you can see what you skipped.","exampleOpenByDefault":false,"note":"","meta":{"pack":"field-service-trades","packName":"Field-service trades","packVersion":"1.0.0","trade":"plumbing","tradeLabel":"Plumbing","tier":2,"tierName":"The office","persona":"Carla","spineVersion":"1.0.0","builtAt":"2026-09-08"}};
+const SCHEMA = [{"id":"p1","num":"Part 1","title":"You and your work","minutes":3,"intro":"A quick picture of your job so the rest of your answers have context.","questions":[{"id":"p1.name","type":"text","label":"Your name","placeholder":"First and last"},{"id":"p1.role","type":"text","label":"Your role or title","placeholder":"e.g., Office manager, Dispatcher, Director of Operations"},{"id":"p1.org","type":"text","label":"Company name","placeholder":"Where you work"},{"id":"p1.email","type":"email","label":"Best email for follow-up questions","placeholder":"you@example.com"},{"id":"p1.areas","type":"checkboxes","other":true,"label":"Which areas are you responsible for?","help":"Check everything that lands on your desk, even partly.","options":["Phones and call booking","Dispatch and the board","Scheduling installs","Estimates and proposals","Invoicing and collections","Maintenance agreements / memberships","Parts, purchasing and truck stock","Permits and inspections","Warranty registration and claims","Payroll, timecards and commissions","Marketing, reviews and follow-ups","Fleet and trucks","Hiring and HR paperwork"]},{"id":"p1.people","type":"text","label":"How many people do you work with or supervise day to day?","help":"A rough number is fine. Say who: “6 techs, 1 installer, me and the owner in the office.”","placeholder":"e.g., 8 in the field, 2 in the office","example":"12 techs (8 HVAC, 4 plumbing), 2 installers, me and the owner in the office, a bookkeeper two days a week."},{"id":"p1.systems","type":"checkboxes","other":true,"label":"What systems and tools do you touch in a normal week?","help":"Tap everything you use, then add anything missing. The whiteboard and the group text count.","options":["ServiceTitan","Housecall Pro","Jobber","FieldEdge","Service Fusion","Successware","Workiz","QuickBooks Online","QuickBooks Desktop","Sage Intacct","Excel or Google Sheets","Google Calendar","A whiteboard","Group text / WhatsApp","Paper tickets","Supplier portals","Manufacturer warranty portals","GPS / fleet tracking","Phone system or answering service","A financing portal"]},{"id":"p1.hours","type":"textarea","label":"Where do your hours actually go in a typical week?","help":"Rough buckets with hours. Don’t be precise — be honest. Include the things that don’t feel like “real work.”","placeholder":"e.g., Phones ~12 hrs · The board ~10 hrs · Invoicing ~6 hrs · Chasing parts and people ~5 hrs …","example":"Phones and booking ~12 hrs · The board, mornings and the 4:30 rebuild ~10 hrs · Reviewing tickets before they can be invoiced ~6 hrs · Chasing parts, permits, and deposits ~5 hrs · Agreements and renewals ~3 hrs · Everything else ~6 hrs"},{"id":"p1.season","type":"textarea","cls":"short","optional":true,"label":"When is your busy season, and what changes when it hits?","help":"What gets dropped, what gets worse, who gets added.","example":"The week of Thanksgiving is our worst — the Monday before and the Monday after, disposals, clogs, and mains. Then the first hard freeze. Summer is slower on service but heavy on remodel rough-ins."}]},{"id":"p2","num":"Part 2","title":"The pain inventory","minutes":8,"intro":"This is the most important part. List up to ten things from your last two working weeks that were slow, repetitive, error-prone, or just annoying. One per row. For each one, describe one specific occasion — what actually happened, not what usually happens.","questions":[{"id":"p2.pain","type":"table","label":"Ten things that cost you time in the last two weeks","help":"You don’t have to fill all ten. Five good rows beat ten vague ones.","numbered":true,"rows":10,"max":14,"columns":[{"k":"what","label":"What happened, concretely (one occasion)","type":"textarea","w":"3fr","placeholder":"Last Thursday I…"},{"k":"freq","label":"How often","w":"1fr","placeholder":"weekly, every job…"},{"k":"time","label":"Time lost each time (hands-on, not waiting)","w":"1.1fr","placeholder":"45 min, 2 hrs…"},{"k":"who","label":"Who else is affected","w":"1.2fr","placeholder":"the techs, the owner…"}],"exampleRows":[{"n":1,"what":"Tuesday I reviewed 19 completed tickets before invoicing. Six had no fixture or part listed — just ‘replaced.’ I texted three techs to ask what they replaced.","freq":"Daily","time":"1.5 hrs","who":"The techs; the owner"},{"n":2,"what":"A water heater went in on the 3rd; I gave the township notice on the 9th because the install lead didn’t tell me it was done. Past the five-day window. The inspection had to be rescheduled and the customer took a second day off.","freq":"Every heater, 8–10 a month","time":"45 min","who":"The install lead; the customer"},{"n":3,"what":"Backflow tests: I keep the due dates in a spreadsheet built from last year’s tests. Two commercial customers got notices from the water department before I called them.","freq":"Monthly","time":"2 hrs, plus the embarrassment","who":"Two customers; the owner"},{"n":4,"what":"Re-typed 14 supply-house receipts into the jobs so the invoices carried the cost. Two had no job number written on them.","freq":"Weekly","time":"1 hr","who":"Owner"},{"n":5,"what":"A property manager disputed three time-and-materials invoices because the tickets didn’t show hours on site — we had drive time and wait time nobody logged. Took a week to settle for less.","freq":"Monthly","time":"3 hrs, plus the write-down","who":"Owner; the tech who was there"},{"n":6,"what":"Rebuilt the board at 6:10 after a no-water and a sewer backup came in and two techs said their afternoons would run over.","freq":"Daily","time":"1 hr","who":"Every tech"}]}],"rule":{"eyebrow":"The rule for this part","text":"No solutions. Your rows may not contain the words app, software, system, automate, dashboard, or AI. If you start writing “we need something that…”, stop and write down what happened instead."},"aside":"The richest ground is rarely the main event of your job. It’s the preparing, the checking, and the chasing around it.","tips":{"eyebrow":"If you get stuck","items":["What did you re-key from a tech’s ticket into the invoice or QuickBooks this week?","What did you chase — a deposit, a part, a permit, a signature, a timecard?","Which agreement or membership renewal slipped, and how did you find out?","What callback or warranty return didn’t get attributed to anyone, or got billed by mistake?","What did a tech buy at the counter that you only learned about from the receipt?","What did you apologize to a customer for — an arrival window, a part that didn’t come in, a double-booked morning?","What lives on the whiteboard, in a notebook, or in a group text because the software doesn’t hold it?","What do you type into tomorrow’s board every evening that already exists somewhere else?"]}},{"id":"p3","num":"Part 3","title":"Your spreadsheets and workarounds","minutes":4,"intro":"Most of the real system lives in personal spreadsheets, notebooks, and habits. That isn’t a failure — it’s where the requirements are hiding. Tell me about yours.","questions":[{"id":"p3.sheets","type":"table","label":"The spreadsheets, lists, and documents you maintain by hand","help":"The ones you built yourself, or inherited, because nothing else held the information.","numbered":true,"rows":4,"max":10,"columns":[{"k":"name","label":"What you call it","w":"1.1fr","placeholder":"Agreements.xlsx"},{"k":"tracks","label":"What it tracks","type":"textarea","w":"1.6fr","placeholder":"Every customer on a maintenance plan, renewal month…"},{"k":"source","label":"Where the information comes from","type":"textarea","w":"1.3fr","placeholder":"your dispatch software + my memory"},{"k":"users","label":"Who else uses it","w":"1fr","placeholder":"The owner, the techs"},{"k":"freq","label":"How often you update it","w":"0.9fr","placeholder":"Daily; more in season"},{"k":"breaks","label":"What goes wrong with it","type":"textarea","w":"1.4fr","placeholder":"Out of date the minute I…"}],"exampleRows":[{"n":1,"name":"Backflow tests.xlsx","tracks":"Every device we test: customer, device, water purveyor, last test, due date.","source":"Last year’s test reports and the purveyor’s letters.","users":"Me; the tech who does the tests.","freq":"When a test comes in.","breaks":"Nothing reminds me. The customer hears from the water department before they hear from us."},{"n":2,"name":"Permits & inspections (Google Sheet)","tracks":"Every heater and every rough-in: township, notice date, permit filed, inspection scheduled, passed.","source":"The install schedule and my phone calls to the township.","users":"The install lead.","freq":"Every install.","breaks":"The five-day clock starts when the heater goes in, and I find out when the tech mentions it."},{"n":3,"name":"Heater warranties","tracks":"Serial, install date, the invoice number that proves the install date, distributor.","source":"The tech’s photo of the label and the invoice.","users":"Nobody but me.","freq":"When a job closes.","breaks":"The claim goes through the distributor, and they want the install invoice. If I can’t find it, the clock runs from the manufacture date instead."},{"n":4,"name":"Agreements.xlsx","tracks":"Every service-plan customer: plan, renewal month, last visit.","source":"The customer list in the software, my memory.","users":"The owner; me.","freq":"Weekly.","breaks":"The software knows who’s on a plan but not when they renew."}]},{"id":"p3.truth","type":"textarea","label":"Where does the “real” information live — the place everyone would agree is the truth? And where does it actually get looked up?","help":"These are often two different places. Say both.","example":"Officially, Housecall Pro. In practice, my spreadsheets for anything that happens after the job closes — renewals, callbacks, permits, warranties — and the owner’s head for pricing."},{"id":"p3.copy","type":"textarea","label":"What do you copy, re-type, or re-format from one place to another every week?","help":"Be literal: from which document, into which document, how many items.","example":"Tech notes → invoice wording (every job). Receipts → job costs (every week). Every new install → the warranty portal, the permit form, and the agreements sheet, three places by hand. Hours from the techs’ texts → the timecard sheet → the bookkeeper."},{"id":"p3.check","type":"textarea","label":"What do you have to check or double-check before you can move on — and what happens when you skip it?","help":"The checks you do because you’ve been burned before.","example":"That every completed ticket has parts, labor, and the right customer before I invoice it. That the deposit was actually collected before the install crew rolls. Skip the first and the invoice is wrong and the tech gets a call. Skip the second and we install a $9,000 system on a promise."},{"id":"p3.chase","type":"textarea","label":"What do you wait on or chase?","help":"Deposits before an install, parts on backorder, the township on a permit, a tech’s timecard, the owner’s OK on a big quote…","example":"Deposits on installs. Techs’ timecards on Friday. Parts a tech ordered by phone that nobody wrote down. Township inspection dates. The owner’s OK on any quote over $5,000."},{"id":"p3.sick","type":"textarea","cls":"short","optional":true,"label":"What would break if you were out for two weeks?","help":"The things only you know how to do are the things most worth writing down.","example":"Nobody else knows which agreements are up, what’s been permitted, or which callbacks are open. The board would get built, badly. Invoices would stop going out."}]},{"id":"p4","num":"Part 4","title":"Pick one, and dig","minutes":4,"intro":"Look back at your inventory. Pick the one that costs you the most, that affects other people, and where the information already exists somewhere — an email, a form, a sheet. That’s the one worth building for first.","questions":[{"id":"p4.pick","type":"group","label":"My #1 problem","fields":[{"k":"row","label":"Row number from Part 2","type":"number","width":"110px"},{"k":"sentence","label":"In one plain sentence","type":"text","grow":true}],"example":"Row 1 — Reading every completed ticket and fixing it by hand before it can be invoiced."},{"id":"p4.backup","type":"group","label":"My backup, if the first one turns out to be harder than it looks","fields":[{"k":"row","label":"Row number","type":"number","width":"110px"},{"k":"sentence","label":"In one plain sentence","type":"text","grow":true}],"example":"Row 3 — Knowing which agreements renew this month without a spreadsheet I don’t trust."},{"id":"p4.why","type":"textarea","label":"Why this one?","help":"It costs you every week, it costs someone else, the information already exists as text somewhere…","example":"It’s every job, every day. It’s why invoices go out three days late, which is why deposits and collections are a mess too. And the information already exists — it’s in the tech’s notes and photos, just not in the right boxes."},{"id":"p4.whys","type":"group","stacked":true,"label":"Why does it happen? Keep asking “because.”","help":"Go as deep as you can; three is fine. Two endings that mean you’re not done: “because the software is bad” (too vague — what specifically?) and “because that’s how the company is set up” (true, but nobody can build for it — back up one step).","fields":[{"k":"b1","label":"1. Because","type":"text"},{"k":"b2","label":"2. Because","type":"text"},{"k":"b3","label":"3. Because","type":"text"},{"k":"b4","label":"4. Because","type":"text"},{"k":"b5","label":"5. Because","type":"text"}],"example":["1. Because techs write the ticket in the truck at 4:50 with one thumb.","2. Because the form asks for part numbers they don’t have in front of them.","3. Because the parts came from the counter that morning and the receipt is in the door pocket.","4. Because nobody stocks the trucks to a list, so every job needs a supply run.","5. Because the owner thinks stocking trucks ties up cash."]},{"id":"p4.root","type":"text","label":"The root cause I’d want fixed","help":"One sentence. Pick the rung that someone could actually build for.","example":"A completed ticket has to be read, corrected, and matched to receipts by a person before it can become an invoice. (Not #5 — that’s the owner’s call, and he’s heard it.)"},{"id":"p4.where","type":"radio","label":"Where in the job does the pain actually sit?","help":"Pick the one that fits best.","options":[["Figuring out what’s needed","“What does this customer actually want?”"],["Finding the information","“Which email had the model number?”"],["Getting inputs ready","“Cleaning up the tech’s notes before I can invoice”"],["Checking before you proceed","“Making sure the parts and labor are coded right”"],["Doing the main task","“Building the board for tomorrow”"],["Fixing when something changes","“The customer called and the part didn’t come in”"],["Watching that it worked","“Did the permit get filed? Did the renewal go out?”"],["Closing out","“Posting the invoice, closing the job, updating the sheet”"]],"note":"If you picked “doing the main task,” look again. The main task usually goes fine — the pain is in getting ready, checking, and chasing around it. If it really is the main task, keep it.","example":"First instinct: doing the main task (invoicing). Second look: getting inputs ready. Once a ticket is clean, invoicing it takes four minutes."}]},{"id":"p5","num":"Part 5","title":"Walk me through it","minutes":5,"intro":"For your #1 problem, tell me the story of one real time you did it, start to finish. Words are fine. Be literal about file names, who sent what, and where things end up.","questions":[{"id":"p5.trigger","type":"textarea","cls":"short","label":"The trigger — what happens in the real world right before you start?","example":"A tech taps ‘complete’ on a job, usually between 4 and 6 p.m., sometimes the next morning."},{"id":"p5.input","type":"textarea","label":"The input — the actual file, screen, email, form, or conversation","help":"Name it: the completed job in the software, the tech’s notes and photos, the supplier receipt, the email from the property manager. Say how many a day and how much they vary from one tech to the next.","example":"The job in Housecall Pro: the tech’s notes (two to six lines, one thumb), zero to eight photos, the line items he remembered to add, and whatever receipts he hands me in the morning. 15–25 of these a day. The variation is the tech: two write full sentences, one writes ‘fixed.’"},{"id":"p5.steps","type":"textarea","cls":"tall","label":"What you do with it, step by step","help":"Number the steps. Include the parts that feel too obvious to mention — those are usually the parts that matter most.","placeholder":"1. \n2. \n3. ","example":["1. Open each completed job in order of completion.","2. Read the notes and look at the photos to work out what was actually done.","3. Check the line items against the notes; add the parts that are in the photos but not on the invoice.","4. Match any receipt to the job by date and tech; add the cost.","5. Fix labor coded as material, or the wrong flat-rate task.","6. If I can’t tell, text the tech and wait.","7. Mark it ready; the invoice goes out from the software; the sync to QuickBooks runs overnight.","8. Next morning, check the QuickBooks sync errors and redo the ones that failed."]},{"id":"p5.output","type":"textarea","label":"The output — what you produce, and where it lands","help":"Which screen, which sheet, which printout, which email — and who receives it. Not “on my screen.”","example":"A clean job in Housecall Pro that becomes the invoice the customer gets by email, and the transaction QuickBooks receives overnight. Plus a row in my callbacks sheet if the notes mention a previous visit."},{"id":"p5.gate","type":"textarea","cls":"short","label":"Who checks or approves it, and who notices if it’s wrong?","example":"Me. Nobody checks me. The customer notices when the invoice says something the tech didn’t do. The bookkeeper notices at month-end when costs are missing."},{"id":"p5.errors","type":"textarea","label":"What does a wrong answer look like? What does a missed item look like? Which is worse?","example":"Wrong: a part billed that wasn’t used, or labor at the wrong rate — the customer calls, we credit it, the tech looks bad. Missed: a part used and never billed — we eat it and never know. Missed is worse because it’s silent."},{"id":"p5.numbers","type":"group","label":"The numbers","help":"Best guesses are fine.","fields":[{"k":"byhand","label":"How long it takes by hand today","type":"number","unit":"minutes"},{"k":"check","label":"How long to check one finished result","type":"number","unit":"minutes"},{"k":"permonth","label":"How many times a month","type":"number","unit":"times"}],"example":"About 6 minutes a ticket, 90 minutes a day · 1 minute to check a finished one · 20 working days a month"},{"id":"p5.examples","type":"radio","inline":true,"label":"Could you share 10–20 real examples of the input, and what the finished result should look like — with customer names and personal details removed?","help":"This matters more than anything else on this page. Real examples are how a builder learns what “right” looks like. Nothing gets built from invented data.","options":["Yes, I can pull those together","Probably — I’d need to check with someone first","No, or not sure how"],"example":"Yes — last month’s completed jobs, with customer names and addresses removed. The owner will want to know first."},{"id":"p5.examples_who","type":"text","optional":true,"label":"If someone needs to okay that, who?","placeholder":"Name and role"}]},{"id":"p6","num":"Part 6","title":"Fit and guardrails","minutes":4,"intro":"A few checks that save wasted weeks. Be honest — a “yes” here isn’t a bad thing. It changes what gets built, not whether.","questions":[{"id":"p6.disq","type":"checkboxes","none":"None of these","label":"Are any of these true for your #1 problem?","help":"Check any that apply. Any check means the fix should draft and let a person decide, rather than act on its own.","options":["The whole value is that it’s done exactly the same way every time (payroll, a price book, a permit form)","One mistake costs more than a hundred correct answers save (a wrong price to a customer, a wrong part on a truck, a missed safety step)","Someone must be able to see exactly why a result came out the way it did (an inspector, an auditor, the owner)","The people who do this task have said they don’t want it changed","It’s already fast and cheap, and a good-enough rule exists","The information never changes and there isn’t much of it"]},{"id":"p6.qual","type":"checkboxes","label":"Which of these describe the task?","help":"Check all that fit.","options":["Reading or writing everyday language (tech notes, emails, forms, requests)","Sorting many varied items into your categories (every call, every request, every complaint)","Picking out the few that need attention from the many that don’t","Personalizing the same message for different customers","Matching two lists and flagging what differs (the receipt vs. the PO, the invoice vs. the job)","Producing the same report or sheet from the same kind of file every week","Answering questions from a fixed set of documents (your price book, your policies, the manufacturer’s specs)","Predicting something that hasn’t happened yet (which estimates will close, which weeks will be short-staffed)"]},{"id":"p6.nosoftware","type":"textarea","label":"The no-new-software answer: what’s the best fix that needs nothing built at all?","help":"A rule, a checklist, a template, a filter, a process change, asking someone. There almost always is one.","example":"A required checklist on the tech’s job form: parts used, from truck or counter, receipt photo attached. The software has custom checklists; we never turned them on."},{"id":"p6.notenough","type":"textarea","cls":"short","label":"Why isn’t that enough?","help":"If you can’t answer this, the no-software fix is probably the right first step — and that’s a fine outcome.","example":"Two of the twelve will ignore it, and it doesn’t help with the receipts that are already in a door pocket. I’d still read every ticket, just faster."},{"id":"p6.mode","type":"radio","inline":true,"label":"Should the tool do it, or help you do it?","options":["Do it, and I spot-check","Draft or suggest, and I decide every time","Not sure"],"note":"Rule of thumb: automate what’s tedious and agreed-on. Assist with what people enjoy, what carries relationships, or where people disagree about what “correct” means."},{"id":"p6.agree","type":"yesno","label":"Three quick ones","items":[{"k":"agree","t":"Do people agree on the correct way to do this task?"},{"k":"stakes","t":"Are the stakes high for any single case?"},{"k":"enjoy","t":"Do people enjoy doing this task?"}],"example":"Agree: yes — what a clean ticket looks like isn’t controversial. Stakes: medium; a wrong invoice is fixable, a missed part is money gone. Enjoy: nobody."},{"id":"p6.data","type":"checkboxes","none":"None of these","label":"Does the information involved include any of these?","help":"This decides how examples get shared and what a first version is allowed to touch.","options":["Customer addresses with gate, alarm, or lockbox codes","Cards on file, or card numbers written on tickets","Financing applications (SSN, income)","Employee driving records or DOT medical cards","Refrigerant logs and EPA 608 certification copies","Payroll and commission sheets","Job-site photos of the inside of customers’ homes"]},{"id":"p6.approver","type":"text","label":"Who at your company needs to know or approve before anything runs on real information?","placeholder":"Name and role — or “nobody, it’s my call”","example":"The owner. And the bookkeeper would want to know before anything touches QuickBooks."},{"id":"p6.systems","type":"textarea","label":"Which systems would it need to touch — and could it be read-only?","help":"The safest first version reads from your systems and never writes into them. Is that workable here? What would it need to read?","example":"Read the completed jobs from Housecall Pro — the export is a CSV I can download myself, or the API if the owner upgrades the plan. It doesn’t need to write anything: give me a list of what to fix and I’ll fix it in the software."}]},{"id":"p7","num":"Part 7","title":"What “better” looks like","minutes":3,"intro":"Now the outcome. Fill in the blanks in your own words — these two sentences become the first lines of the build.","questions":[{"id":"p7.today","type":"fill","label":"The problem, in one sentence","parts":["Today, ",{"k":"who","ph":"who"}," has to ",{"k":"what","ph":"do what","w":"260px"}," by hand, which takes ",{"k":"time","ph":"how long"}," per ",{"k":"freq","ph":"how often"},", and it goes wrong when ",{"k":"wrong","ph":"what happens","w":"260px"},"."],"example":"Today, I have to read and correct every completed ticket by hand, which takes about 90 minutes per day, and it goes wrong when a tech’s notes don’t match the parts and I can’t reach him."},{"id":"p7.goal","type":"fill","label":"The goal, in one sentence","parts":["I’d want something that turns ",{"k":"input","ph":"this input","w":"220px"}," into ",{"k":"output","ph":"this output","w":"220px"},", so that ",{"k":"who","ph":"who"}," can ",{"k":"do","ph":"do what","w":"220px"}," in under ",{"k":"time","ph":"how long"},"."],"example":"I’d want something that turns the day’s completed jobs (notes, photos, line items, receipts) into a short list of what’s wrong with each ticket and the likely fix, so that I can clean 25 tickets in under 30 minutes."},{"id":"p7.success","type":"textarea","label":"How would you know it worked? Give me a number.","help":"“Invoices out the same day instead of three days later.” “Zero missed renewals this season.” “The board built by 4:30 instead of 6.”","example":"Invoices out the same day instead of three days later. Missed parts found before the invoice, not at month-end. My 4:45 board rebuild not pushed to 6 by ticket review."},{"id":"p7.notdo","type":"textarea","label":"What should this NOT do?","help":"At least two things. Drawing the line is as useful as describing the goal.","placeholder":"It should not… \nIt should not…","example":["It should not change a ticket or send an invoice on its own — I decide.","It should not text the techs — that’s my relationship.","It should not touch QuickBooks."]},{"id":"p7.time","type":"textarea","cls":"short","label":"If it worked, what would you do with the time?","example":"Sell renewals in March instead of finding expired ones in July. Build tomorrow’s board once."},{"id":"p7.stop","type":"textarea","cls":"short","label":"What would make you stop using it after a month?","example":"If it flags things that are fine more than it flags things that are wrong. If it needs me to reformat anything first. If the owner uses it to grade the techs."},{"id":"p7.users","type":"textarea","cls":"short","label":"Who else, by name or role, would use this or depend on it?","example":"Me first. The owner would read the daily list. The bookkeeper would stop asking me for missing costs."},{"id":"p7.boring","type":"checkboxes","label":"Which of these are true today?","help":"Each unchecked box is where a tool breaks first — and something to fix before or while building.","options":["One named person would own this after it’s built, and it’s clear who","The information it needs lives in one place (not three spreadsheets and a group text)","The information arrives in a consistent format","There’s a written standard for what a “good” result looks like","Someone would look at a “not sure — needs a human” list every time it runs"]},{"id":"p7.else","type":"textarea","optional":true,"label":"Anything else I should know?","help":"Busy seasons, staff turnover, the devices you use (a phone in the truck? a laptop in the office?), IT rules, budget, things that have been tried before and why they didn’t stick.","example":"We tried a bigger platform for a year and went back to Housecall Pro because of the cost and because two of the techs wouldn’t use the app. Anything that asks the techs to do more is dead on arrival. I work on a laptop in the office and my phone in the truck."}]},{"id":"pf","num":"Last part","title":"About this worksheet","minutes":2,"intro":"You’re one of the first people to fill this out. Help me make it better for the next one — be blunt.","questions":[{"id":"pf.minutes","type":"number","label":"How long did this actually take you?","unit":"minutes","timerHint":true},{"id":"pf.length","type":"radio","inline":true,"label":"Was the length…","options":["Too long","About right","Could be longer"]},{"id":"pf.confusing","type":"textarea","label":"Which questions were confusing, hard to answer, or felt like the same question twice?","help":"Name them by part and wording if you can."},{"id":"pf.pointless","type":"textarea","cls":"short","label":"Which questions felt pointless for your work?"},{"id":"pf.missing","type":"textarea","label":"What didn’t I ask that I should have?"},{"id":"pf.examples","type":"textarea","cls":"short","label":"Did the examples help, get in the way, or feel off for your world?"},{"id":"pf.rating","type":"scale","label":"Rate this worksheet overall","low":"Waste of time","high":"Worth every minute"},{"id":"pf.else","type":"textarea","cls":"short","optional":true,"label":"Anything else?"}]}];
+
+/* =========================================================================
+   Engine — you should not need to edit below this line
+   ========================================================================= */
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const _P = new URLSearchParams(location.search);
+  const PERSON = { name:(_P.get("name")||"").trim(), company:(_P.get("co")||_P.get("company")||"").trim(), interview:_P.get("interview") === "1" };
+  CONFIG.person = PERSON;
+  if(PERSON.interview) CONFIG.mode = "scroll";
+  const app = $("#app");
+  let state = {}, meta = {};
+  let saveTimer = null;
+
+  // ---------- storage ----------
+  function load(){
+    try{
+      const raw = localStorage.getItem(CONFIG.storageKey);
+      if(raw){ const o = JSON.parse(raw); state = o.state || {}; meta = o.meta || {}; }
+    }catch(e){ state = {}; meta = {}; }
+  }
+  function save(){
+    const pill = $("#saved");
+    pill.textContent = "Saving…"; pill.className = "pill busy";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      meta.updatedAt = Date.now();
+      try{
+        localStorage.setItem(CONFIG.storageKey, JSON.stringify({state, meta}));
+        pill.textContent = "Saved"; pill.className = "pill ok";
+      }catch(e){
+        pill.textContent = "Not saved (storage off)"; pill.className = "pill dim";
+      }
+      updateProgress();
+    }, 350);
+  }
+  function setVal(id, v){
+    if(!meta.startedAt) meta.startedAt = Date.now();
+    state[id] = v; save();
+  }
+  function get(id){ return state[id]; }
+
+  // ---------- helpers ----------
+  function el(tag, attrs, ...kids){
+    const n = document.createElement(tag);
+    if(attrs) for(const [k,v] of Object.entries(attrs)){
+      if(v === undefined || v === null || v === false) continue;
+      if(k === "class") n.className = v;
+      else if(k === "html") n.innerHTML = v;
+      else if(k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for(const kid of kids){ if(kid == null) continue; n.append(kid.nodeType ? kid : document.createTextNode(String(kid))); }
+    return n;
+  }
+  const fmt = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const isEmpty = v => v == null || (typeof v === "string" && !v.trim()) || (Array.isArray(v) && v.length === 0) ||
+    (typeof v === "object" && !Array.isArray(v) && Object.values(v).every(isEmpty));
+  function personalize(s){ return s.replace(/\{first\}/g, CONFIG.consultantFirst).replace(/\{name\}/g, CONFIG.consultantName).replace(/\{email\}/g, CONFIG.consultantEmail); }
+
+  // ---------- renderers ----------
+  function exampleBlock(q){
+    if(!q.example && !q.exampleRows) return null;
+    const body = el("div", {class:"ex-body"});
+    if(q.exampleRows){
+      q.exampleRows.forEach(r => {
+        const d = el("div", {class:"exrow"});
+        d.append(el("b", null, (r.n ? r.n + ". " : "")));
+        q.columns.forEach((c, i) => {
+          if(r[c.k] == null) return;
+          if(i > 0) d.append(el("span", {class:"m"}, " · "));
+          d.append(el("span", {class:"m"}, c.label.replace(/\s*\(.*\)$/, "") + ": "));
+          d.append(r[c.k]);
+        });
+        body.append(d);
+      });
+    } else if(Array.isArray(q.example)){
+      q.example.forEach(line => body.append(el("p", null, line)));
+    } else {
+      body.append(el("p", null, q.example));
+    }
+    return el("details", {class:"ex", open:CONFIG.exampleOpenByDefault ? true : null}, el("summary", null, "Example — " + CONFIG.exampleWho.split(",")[0]), body);
+  }
+
+  function labelFor(q, forId){
+    const l = el("label", {class:"q-label", for:forId});
+    l.append(q.label);
+    if(q.optional) l.append(el("span", {class:"opt"}, "optional"));
+    return l;
+  }
+
+  function autoGrow(ta){
+    const grow = () => { ta.style.height = "auto"; ta.style.height = (ta.scrollHeight + 2) + "px"; };
+    ta.addEventListener("input", grow);
+    requestAnimationFrame(grow);
+  }
+
+  function rText(q){
+    const inp = el("input", {type:q.type === "email" ? "email" : "text", id:q.id, placeholder:q.placeholder || "", value:get(q.id) || ""});
+    inp.addEventListener("input", () => setVal(q.id, inp.value));
+    return inp;
+  }
+  function rTextarea(q){
+    const ta = el("textarea", {id:q.id, class:q.cls || "", placeholder:q.placeholder || ""});
+    ta.value = get(q.id) || "";
+    ta.addEventListener("input", () => setVal(q.id, ta.value));
+    autoGrow(ta);
+    return ta;
+  }
+  function rNumber(q){
+    const wrap = el("div", {class:"inline", style:"display:flex;align-items:center;flex-wrap:wrap;gap:6px"});
+    const inp = el("input", {type:"number", id:q.id, min:"0", inputmode:"numeric", value:get(q.id) ?? ""});
+    inp.addEventListener("input", () => setVal(q.id, inp.value));
+    wrap.append(inp);
+    if(q.unit) wrap.append(el("span", {class:"unit"}, q.unit));
+    if(q.timerHint){
+      const hint = el("span", {class:"unit", id:"timerHint"});
+      wrap.append(hint);
+    }
+    return wrap;
+  }
+  function rRadio(q){
+    const box = el("div", {class:"choices" + (q.inline ? " inline" : ""), role:"radiogroup", "aria-labelledby":q.id + "-label"});
+    const cur = get(q.id);
+    q.options.forEach((o, i) => {
+      const [text, sub] = Array.isArray(o) ? o : [o, null];
+      const inp = el("input", {type:"radio", name:q.id, value:text, id:q.id + "-" + i});
+      if(cur === text) inp.checked = true;
+      const lab = el("label", {class:"choice" + (cur === text ? " checked" : ""), for:q.id + "-" + i}, inp, el("span", null, text, sub ? el("span", {class:"sub"}, sub) : null));
+      inp.addEventListener("change", () => {
+        setVal(q.id, text);
+        box.querySelectorAll(".choice").forEach(c => c.classList.remove("checked"));
+        lab.classList.add("checked");
+      });
+      box.append(lab);
+    });
+    return box;
+  }
+  function rCheckboxes(q){
+    const box = el("div", {class:"choices"});
+    let cur = get(q.id) || {sel:[], other:""};
+    if(Array.isArray(cur)) cur = {sel:cur, other:""};
+    const opts = q.none ? [...q.options, q.none] : q.options;
+    const labs = [];
+    opts.forEach((text, i) => {
+      const inp = el("input", {type:"checkbox", id:q.id + "-" + i, value:text});
+      if(cur.sel.includes(text)) inp.checked = true;
+      const lab = el("label", {class:"choice" + (inp.checked ? " checked" : ""), for:q.id + "-" + i}, inp, el("span", null, text));
+      labs.push([inp, lab, text]);
+      inp.addEventListener("change", () => {
+        if(q.none && text === q.none && inp.checked){
+          labs.forEach(([i2, l2, t2]) => { if(t2 !== q.none){ i2.checked = false; l2.classList.remove("checked"); } });
+        } else if(q.none && inp.checked){
+          labs.forEach(([i2, l2, t2]) => { if(t2 === q.none){ i2.checked = false; l2.classList.remove("checked"); } });
+        }
+        lab.classList.toggle("checked", inp.checked);
+        cur.sel = labs.filter(([i2]) => i2.checked).map(([, , t2]) => t2);
+        setVal(q.id, {sel:cur.sel, other:cur.other});
+      });
+      box.append(lab);
+    });
+    if(q.other){
+      const oi = el("input", {type:"text", id:q.id + "-other", placeholder:"Anything else?", value:cur.other || ""});
+      oi.addEventListener("input", () => { cur.other = oi.value; setVal(q.id, {sel:cur.sel, other:cur.other}); });
+      box.append(el("div", {class:"other-wrap"}, el("label", {for:q.id + "-other"}, "Other:"), oi));
+    }
+    return box;
+  }
+  function rScale(q){
+    const box = el("div");
+    const row = el("div", {class:"scale", role:"radiogroup"});
+    const cur = get(q.id);
+    for(let i = 1; i <= 5; i++){
+      const inp = el("input", {type:"radio", name:q.id, value:String(i), id:q.id + "-" + i});
+      if(String(cur) === String(i)) inp.checked = true;
+      const lab = el("label", {class:"choice" + (inp.checked ? " checked" : ""), for:q.id + "-" + i, style:"position:relative"}, inp, el("span", null, String(i)));
+      inp.addEventListener("change", () => { setVal(q.id, String(i)); row.querySelectorAll(".choice").forEach(c => c.classList.remove("checked")); lab.classList.add("checked"); });
+      row.append(lab);
+    }
+    box.append(row, el("div", {class:"scale-ends"}, el("span", null, "1 — " + (q.low || "")), el("span", null, "5 — " + (q.high || ""))));
+    return box;
+  }
+  function rYesNo(q){
+    const box = el("div", {class:"yn"});
+    const cur = get(q.id) || {};
+    q.items.forEach(it => {
+      const row = el("div", {class:"yn-row"}, el("span", {class:"t"}, it.t));
+      ["yes","no"].forEach(v => {
+        const inp = el("input", {type:"radio", name:q.id + "-" + it.k, value:v});
+        if(cur[it.k] === v) inp.checked = true;
+        inp.addEventListener("change", () => { cur[it.k] = v; setVal(q.id, {...cur}); });
+        row.append(el("label", null, inp, v));
+      });
+      box.append(row);
+    });
+    return box;
+  }
+  function rFill(q){
+    const box = el("div", {class:"fill"});
+    const cur = get(q.id) || {};
+    q.parts.forEach(p => {
+      if(typeof p === "string"){ box.append(p); return; }
+      const inp = el("input", {type:"text", placeholder:p.ph || "", "aria-label":p.ph || p.k, value:cur[p.k] || "", style:p.w ? "min-width:" + p.w : ""});
+      inp.addEventListener("input", () => { cur[p.k] = inp.value; setVal(q.id, {...cur}); });
+      box.append(inp);
+    });
+    return box;
+  }
+  function rGroup(q){
+    const box = el("div", {class:"row-fields", style:q.stacked ? "flex-direction:column;gap:10px" : ""});
+    const cur = get(q.id) || {};
+    q.fields.forEach(f => {
+      const fid = q.id + "-" + f.k;
+      const wrap = el("div", {class:"f", style:(f.grow ? "flex:1;min-width:220px;" : "") + (f.width ? "min-width:0;width:" + f.width + ";" : "")});
+      wrap.append(el("label", {for:fid}, f.label));
+      const inp = el("input", {type:f.type === "number" ? "number" : "text", id:fid, min:f.type === "number" ? "0" : null, placeholder:f.placeholder || "", value:cur[f.k] ?? ""});
+      inp.addEventListener("input", () => { cur[f.k] = inp.value; setVal(q.id, {...cur}); });
+      if(f.unit) wrap.append(el("div", {class:"inline"}, inp, el("span", {class:"unit"}, f.unit)));
+      else wrap.append(inp);
+      box.append(wrap);
+    });
+    return box;
+  }
+  function rTable(q){
+    const cols = q.columns;
+    const gridCols = (q.numbered ? "38px " : "") + cols.map(c => c.w || "1fr").join(" ");
+    const box = el("div", {class:"tbl"});
+    const head = el("div", {class:"tbl-head", style:"grid-template-columns:" + gridCols});
+    if(q.numbered) head.append(el("div", null, "#"));
+    cols.forEach(c => head.append(el("div", null, c.label)));
+    box.append(head);
+    const body = el("div");
+    box.append(body);
+    let rows = get(q.id) || [];
+    if(!Array.isArray(rows)) rows = [];
+    const count = Math.max(q.rows, rows.length);
+    while(rows.length < count) rows.push({});
+    function commit(){ setVal(q.id, rows.map(r => ({...r}))); }
+    function addRow(idx){
+      const r = el("div", {class:"tbl-row", style:"grid-template-columns:" + gridCols});
+      if(q.numbered) r.append(el("div", {class:"n", "data-label":""}, String(idx + 1)));
+      cols.forEach(c => {
+        const cell = el("div", {"data-label":c.label});
+        let inp;
+        if(c.type === "textarea"){ inp = el("textarea", {placeholder:c.placeholder || "", "aria-label":c.label + ", row " + (idx + 1), rows:"2"}); inp.value = rows[idx][c.k] || ""; autoGrow(inp); }
+        else { inp = el("input", {type:"text", placeholder:c.placeholder || "", "aria-label":c.label + ", row " + (idx + 1), value:rows[idx][c.k] || ""}); }
+        inp.addEventListener("input", () => { rows[idx][c.k] = inp.value; commit(); });
+        cell.append(inp);
+        r.append(cell);
+      });
+      body.append(r);
+    }
+    rows.forEach((_, i) => addRow(i));
+    const foot = el("div", {class:"tbl-foot"});
+    const addBtn = el("button", {type:"button", class:"link", style:"padding:2px 0"}, "+ Add a row");
+    addBtn.addEventListener("click", () => {
+      if(rows.length >= q.max) return;
+      rows.push({}); addRow(rows.length - 1); commit();
+      if(rows.length >= q.max) addBtn.disabled = true;
+    });
+    foot.append(el("span", null, "Empty rows are fine — they’re left out when you send."), addBtn);
+    box.append(foot);
+    return box;
+  }
+
+  function renderQuestion(q){
+    const wrap = el("div", {class:"q", id:"q-" + q.id});
+    if(q.type === "note"){ wrap.append(el("p", {class:"aside"}, q.text)); return wrap; }
+    const labelId = q.id + "-label";
+    const l = labelFor(q, ["text","email","textarea","number"].includes(q.type) ? q.id : null);
+    l.id = labelId;
+    if(!["text","email","textarea","number"].includes(q.type)){ const s = el("span", {class:"q-label", id:labelId}); s.append(...l.childNodes); wrap.append(s); }
+    else wrap.append(l);
+    if(q.help) wrap.append(el("p", {class:"q-help"}, q.help));
+    let ctl;
+    switch(q.type){
+      case "text": case "email": ctl = rText(q); break;
+      case "textarea": ctl = rTextarea(q); break;
+      case "number": ctl = rNumber(q); break;
+      case "radio": ctl = rRadio(q); break;
+      case "checkboxes": ctl = rCheckboxes(q); break;
+      case "scale": ctl = rScale(q); break;
+      case "yesno": ctl = rYesNo(q); break;
+      case "fill": ctl = rFill(q); break;
+      case "group": ctl = rGroup(q); break;
+      case "table": ctl = rTable(q); break;
+      default: ctl = el("div", null, "Unknown question type: " + q.type);
+    }
+    wrap.append(ctl);
+    if(q.note) wrap.append(el("p", {class:"q-help", style:"margin-top:10px;font-style:italic"}, q.note));
+    const ex = exampleBlock(q);
+    if(ex) wrap.append(ex);
+    return wrap;
+  }
+
+  function renderAll(){
+    const jump = $("#jump");
+    SCHEMA.forEach(sec => {
+      const s = el("section", {class:"part", id:sec.id, "aria-labelledby":sec.id + "-h"});
+      s.append(el("div", {class:"part-head"}, el("span", {class:"part-num"}, sec.num), el("h2", {id:sec.id + "-h"}, sec.title), el("span", {class:"part-min"}, "about " + sec.minutes + " min")));
+      if(sec.intro) s.append(el("p", {class:"intro"}, sec.intro));
+      if(sec.rule) s.append(el("div", {class:"callout rule"}, el("span", {class:"eyebrow"}, sec.rule.eyebrow), el("p", null, sec.rule.text)));
+      if(sec.tips){ const ul = el("ul"); sec.tips.items.forEach(t => ul.append(el("li", null, t))); s.append(el("div", {class:"callout tips"}, el("span", {class:"eyebrow"}, sec.tips.eyebrow), ul)); }
+      if(sec.aside) s.append(el("p", {class:"aside"}, sec.aside));
+      sec.questions.forEach(q => s.append(renderQuestion(q)));
+      app.append(s);
+      jump.append(el("option", {value:sec.id}, sec.num + " · " + sec.title));
+    });
+    jump.append(el("option", {value:"finish"}, "Review & send"));
+    jump.addEventListener("change", () => { if(jump.value){ document.getElementById(jump.value).scrollIntoView({block:"start"}); jump.value = ""; } });
+  }
+
+  // ---------- progress & timer ----------
+  function answered(q){
+    const v = get(q.id);
+    if(q.type === "table") return Array.isArray(v) && v.some(r => r && !isEmpty(r[q.columns[0].k]));
+    if(q.type === "checkboxes") return v && ((v.sel && v.sel.length) || (v.other && v.other.trim()));
+    return !isEmpty(v);
+  }
+  function updateProgress(){
+    let total = 0, done = 0;
+    SCHEMA.forEach(s => s.questions.forEach(q => { if(q.type === "note" || q.optional) return; total++; if(answered(q)) done++; }));
+    $("#fill").style.width = Math.round(100 * done / total) + "%";
+    $("#progText").innerHTML = "<span class='long'>" + done + " of " + total + " answered</span><span class='short'>" + done + "/" + total + "</span>";
+    if(CONFIG.sittings){ CONFIG.sittings.forEach((s, k) => { let t = 0, d = 0; SCHEMA.filter(p => s.parts.includes(p.id)).forEach(p => p.questions.forEach(q => { if(q.type === "note" || q.optional) return; t++; if(answered(q)) d++; })); const e = document.querySelectorAll(".sitcard .sitprog")[k]; if(e) e.textContent = d + " of " + t + " answered"; }); }
+  }
+  function elapsedMin(){ return meta.startedAt ? Math.max(0, Math.round((Date.now() - meta.startedAt) / 60000)) : 0; }
+  function tick(){
+    const m = elapsedMin();
+    $("#elapsed").textContent = meta.startedAt ? (m < 180 ? m + " min" : "3+ hrs") : "0 min";
+    const h = $("#timerHint"); if(h) h.textContent = meta.startedAt ? "(the page timer says about " + m + " since you started)" : "";
+  }
+
+  // ---------- export ----------
+  function valueText(q){
+    const v = get(q.id);
+    switch(q.type){
+      case "table": {
+        const rows = (Array.isArray(v) ? v : []).filter(r => r && Object.values(r).some(x => x && String(x).trim()));
+        if(!rows.length) return "";
+        return rows.map((r, i) => (i + 1) + ". " + q.columns.map(c => (r[c.k] && String(r[c.k]).trim()) ? c.label.replace(/\s*\(.*\)$/, "") + ": " + String(r[c.k]).trim() : null).filter(Boolean).join(" · ")).join("\n");
+      }
+      case "checkboxes": {
+        if(!v) return "";
+        const parts = [...(v.sel || [])]; if(v.other && v.other.trim()) parts.push("Other: " + v.other.trim());
+        return parts.map(p => "- " + p).join("\n");
+      }
+      case "yesno": return v ? q.items.map(it => v[it.k] ? it.t + " " + v[it.k].toUpperCase() : null).filter(Boolean).join("\n") : "";
+      case "fill": { const o = v || {}; return q.parts.map(p => typeof p === "string" ? p : "[" + ((o[p.k] || "").trim() || "___") + "]").join(""); }
+      case "group": { const o = v || {}; return q.fields.map(f => (o[f.k] !== undefined && String(o[f.k]).trim()) ? f.label + ": " + String(o[f.k]).trim() + (f.unit ? " " + f.unit : "") : null).filter(Boolean).join(q.stacked ? "\n" : " · "); }
+      case "scale": return v ? v + " / 5" : "";
+      case "number": return (v !== undefined && v !== "") ? v + (q.unit ? " " + q.unit : "") : "";
+      default: return v ? String(v).trim() : "";
+    }
+  }
+  function blocks(){
+    const out = [];
+    const name = get("p1.name") || (get("t1.who") || {}).name || PERSON.name || "";
+    out.push({t:"h1", x:CONFIG.title + " — answers" + (name ? " from " + name : "")});
+    out.push({t:"meta", x:"Exported " + new Date().toLocaleString() + (meta.startedAt ? " · about " + elapsedMin() + " minutes since first answer" : "")});
+    if(CONFIG.meta) out.push({t:"meta", x:"Worksheet: " + CONFIG.meta.packName + " (" + CONFIG.meta.tradeLabel + ") · " + CONFIG.meta.tierName + (PERSON.company ? " · " + PERSON.company : "") + (PERSON.interview ? " · interview mode" : "")});
+    SCHEMA.forEach(s => {
+      out.push({t:"h2", x:s.num + " — " + s.title});
+      s.questions.forEach(q => { if(q.type === "note") return; out.push({t:"q", x:q.label, a:valueText(q)}); });
+    });
+    return out;
+  }
+  function toMarkdown(){
+    return blocks().map(b => {
+      if(b.t === "h1") return "# " + b.x + "\n";
+      if(b.t === "meta") return "_" + b.x + "_\n";
+      if(b.t === "h2") return "\n## " + b.x + "\n";
+      return "**" + b.x + "**\n" + (b.a ? b.a : "(no answer)") + "\n";
+    }).join("\n");
+  }
+  function toJSON(){
+    const answers = {}, labels = {};
+    SCHEMA.forEach(s => s.questions.forEach(q => { if(q.type === "note") return; answers[q.id] = get(q.id) ?? null; labels[q.id] = q.label; }));
+    return JSON.stringify({title:CONFIG.title, version:"1.1.0", worksheet:CONFIG.meta || null, person:PERSON, exportedAt:new Date().toISOString(), startedAt:meta.startedAt ? new Date(meta.startedAt).toISOString() : null, elapsedMinutes:elapsedMin(), answers, labels}, null, 2);
+  }
+  function toPrintHTML(){
+    return blocks().map(b => {
+      if(b.t === "h1") return "<h1>" + fmt(b.x) + "</h1>";
+      if(b.t === "meta") return "<p style='color:#666'>" + fmt(b.x) + "</p>";
+      if(b.t === "h2") return "<h2>" + fmt(b.x) + "</h2>";
+      return "<div class='pq'>" + fmt(b.x) + "</div><div class='pa" + (b.a ? "" : " empty") + "'>" + (b.a ? fmt(b.a) : "(no answer)") + "</div>";
+    }).join("");
+  }
+  function download(name, text, type){
+    const blob = new Blob([text], {type});
+    const url = URL.createObjectURL(blob);
+    const a = el("a", {href:url, download:name});
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  function fileStem(){ const n = (get("p1.name") || (get("t1.who") || {}).name || PERSON.name || "answers").trim().replace(/[^\w]+/g, "-").replace(/^-|-$/g, ""); return "where-the-time-goes-" + (n || "answers"); }
+
+  // ---------- wiring ----------
+  function wire(){
+    const M = CONFIG.masthead || {};
+    const subP = s => String(s || "").replace(/\{consultantFirst\}/g, CONFIG.consultantFirst).replace(/\{consultantName\}/g, CONFIG.consultantName).replace(/\{consultantEmail\}/g, CONFIG.consultantEmail).replace(/\{name\}/g, PERSON.name || "there").replace(/\{company\}/g, PERSON.company || CONFIG.title);
+    $("#mastEyebrow").textContent = subP(M.eyebrow || ("Discovery worksheet · " + CONFIG.minutes));
+    if(PERSON.name){ const h = $("#hi"); h.textContent = subP(M.greeting || "Hi {name} — {consultantFirst} here."); h.hidden = false; }
+    $("#lede").textContent = subP(M.lede || "");
+    const hl = $("#howtoList"); (M.howto || []).forEach(x => { const li = document.createElement("li"); li.innerHTML = subP(x); hl.append(li); });
+    const rl = $("#rulesList"); (M.rules || []).forEach(x => { const li = document.createElement("li"); li.innerHTML = subP(x); rl.append(li); });
+    if(!(M.rules || []).length){ $("#rulesCard").hidden = true; $("#howto").classList.add("one"); }
+    if(M.after){ $("#afterText").textContent = subP(M.after); $("#afterBox").hidden = false; }
+    if(PERSON.interview){ const b = $("#interviewBanner"); b.textContent = "Interview mode — " + CONFIG.consultantFirst + " is filling this in with " + (PERSON.name || "you") + " on the call."; b.hidden = false; }
+    else if(M.callOption){ const b = $("#callBtn"); b.textContent = subP(M.callOption); b.hidden = false; b.addEventListener("click", () => { location.href = "mailto:" + encodeURIComponent(CONFIG.consultantEmail) + "?subject=" + encodeURIComponent("Let’s do the worksheet on a call") + "&body=" + encodeURIComponent("Hi " + CONFIG.consultantFirst + ",\n\nI’d rather do this on a call. Good times for me:\n\n"); }); }
+    $("#finishText").textContent = subP(CONFIG.finishText || "");
+
+    const overlay = $("#overlay"), ta = $("#exportText"), st = $("#sheetStatus");
+    const flash = (msg, ok=true) => { st.textContent = msg; st.className = "status " + (ok ? "ok" : "bad"); setTimeout(() => { st.textContent = ""; }, 4000); };
+
+    $("#btnReview").addEventListener("click", () => {
+      ta.value = toMarkdown();
+      $("#sheetSub").textContent = personalize("Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
+      overlay.hidden = false; ta.focus(); ta.setSelectionRange(0, 0);
+    });
+    $("#btnClose").addEventListener("click", () => overlay.hidden = true);
+    overlay.addEventListener("click", e => { if(e.target === overlay) overlay.hidden = true; });
+    document.addEventListener("keydown", e => { if(e.key === "Escape") overlay.hidden = true; });
+
+    $("#btnCopy").addEventListener("click", async () => {
+      try{ await navigator.clipboard.writeText(ta.value); flash("Copied. Paste it into an email."); }
+      catch(e){ ta.focus(); ta.select(); flash("Select-all and copy from the box above (Ctrl/Cmd+C).", false); }
+    });
+    $("#btnEmail").addEventListener("click", () => {
+      const subj = CONFIG.title + " — answers from " + (get("p1.name") || "me");
+      const body = "Hi " + CONFIG.consultantFirst + ",\n\nMy worksheet answers are pasted below.\n\n";
+      window.location.href = "mailto:" + encodeURIComponent(CONFIG.consultantEmail) + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(body);
+      flash("Your email app should open. Paste your copied answers into it.");
+    });
+    $("#btnDlMd").addEventListener("click", () => { download(fileStem() + ".md", ta.value, "text/markdown"); flash("Downloading .md"); });
+    $("#btnDlJson").addEventListener("click", () => { download(fileStem() + ".json", toJSON(), "application/json"); flash("Downloading .json"); });
+
+    if(CONFIG.submitUrl){
+      const b = $("#btnSend"); b.hidden = false; b.textContent = "Send to " + CONFIG.consultantFirst; b.classList.add("primary");
+      b.addEventListener("click", async () => {
+        b.disabled = true; st.textContent = "Sending…"; st.className = "status";
+        try{
+          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body:toJSON()});
+          if(!r.ok) throw new Error("HTTP " + r.status);
+          st.textContent = "Sent. Thank you!"; st.className = "status ok";
+        }catch(e){ st.textContent = "Couldn’t send (" + e.message + "). Use Copy or Download instead."; st.className = "status bad"; b.disabled = false; }
+      });
+    }
+
+    $("#btnPrint").addEventListener("click", () => window.print());
+    window.addEventListener("beforeprint", () => { $("#printview").innerHTML = toPrintHTML(); });
+
+    let armed = false, armTimer = null;
+    const clearBtn = $("#btnClear"), fs = $("#finishStatus");
+    clearBtn.addEventListener("click", () => {
+      if(!armed){ armed = true; clearBtn.textContent = "Really clear everything? Click again to confirm"; clearBtn.classList.add("danger"); clearBtn.classList.remove("link");
+        armTimer = setTimeout(() => { armed = false; clearBtn.textContent = "Clear all answers"; clearBtn.classList.remove("danger"); clearBtn.classList.add("link"); }, 6000); return; }
+      clearTimeout(armTimer);
+      try{ localStorage.removeItem(CONFIG.storageKey); }catch(e){}
+      location.reload();
+    });
+  }
+
+  function setupMode(){
+    if(CONFIG.mode === "stepper"){
+      document.body.classList.add("stepper");
+      const steps = [...app.querySelectorAll(".q")], N = steps.length; let i = 0;
+      const nav = el("div", {class:"stepnav"});
+      const back = el("button", {type:"button", class:"btn2"}, "Back"), cnt = el("span", {class:"stepcount"}), next = el("button", {type:"button", class:"btn2 pri"}, "Next");
+      nav.append(back, cnt, next); app.append(nav);
+      const finish = $("#finish");
+      function show(k, scroll){
+        i = Math.max(0, Math.min(N, k));
+        steps.forEach((s, j) => s.classList.toggle("on", j === i));
+        const done = i >= N; finish.hidden = !done; next.hidden = done; back.disabled = i === 0;
+        if(done) cnt.textContent = "That’s all " + N + ". Go back to change anything.";
+        if(!done){ cnt.textContent = (i + 1) + " of " + N; next.textContent = i === N - 1 ? "Finish" : "Next"; if(scroll){ steps[i].scrollIntoView({block:"start"}); const f = steps[i].querySelector("textarea, input[type=text], input[type=email], input[type=number]"); if(f && window.innerWidth > 700) f.focus({preventScroll:true}); } }
+        else if(scroll) finish.scrollIntoView({block:"start"});
+        try{ localStorage.setItem(CONFIG.storageKey + ":step", String(i)); }catch(e){}
+      }
+      back.addEventListener("click", () => show(i - 1, true));
+      next.addEventListener("click", () => show(i + 1, true));
+      let start = 0; try{ start = Number(localStorage.getItem(CONFIG.storageKey + ":step") || 0); }catch(e){}
+      if(!Number.isFinite(start)) start = 0;
+      show(Math.min(start, N), false);
+      if(start > 0) document.body.classList.add("started");
+      const sb = $("#startBtn"); sb.hidden = false; sb.textContent = "Start";
+      sb.addEventListener("click", () => { document.body.classList.add("started"); if(i >= N) finish.scrollIntoView({block:"start"}); else show(i, true); });
+      $("#jump").hidden = true;
+    }
+    const sit = CONFIG.sittings;
+    if(sit && sit.length && CONFIG.mode !== "stepper"){
+      const nav = $("#sitnav"); nav.hidden = false;
+      sit.forEach((s, k) => {
+        const first = document.getElementById(s.parts[0]);
+        if(first && k > 0){ const d = el("div", {class:"sitting-divider"}, el("span", {class:"eyebrow"}, s.title + " · " + s.minutes), el("p", null, s.note || "")); first.parentNode.insertBefore(d, first); }
+        const card = el("button", {type:"button", class:"sitcard"}, el("b", null, s.title), el("small", null, s.minutes), el("span", {class:"sitprog"}, ""));
+        card.addEventListener("click", () => { if(first) first.scrollIntoView({block:"start"}); });
+        nav.append(card);
+      });
+    }
+  }
+
+  load();
+  if(!state["t1.who"] && (PERSON.name || PERSON.company)) state["t1.who"] = {name:PERSON.name, company:PERSON.company};
+  renderAll();
+  wire();
+  setupMode();
+  updateProgress();
+  tick(); setInterval(tick, 30000);
+  const pill = $("#saved");
+  if(Object.keys(state).length){ pill.textContent = "Saved"; pill.className = "pill ok"; }
+})();
+</script>
+</body>
+</html>

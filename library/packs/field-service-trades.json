@@ -1,0 +1,403 @@
+{
+  "id": "field-service-trades",
+  "name": "Field-service trades",
+  "family": "Field-service trades",
+  "version": "1.0.0",
+  "status": "ready-for-review",
+  "researched": "2026-09-08",
+  "researchFile": "library/research/field-service-trades.md",
+  "notes": "HVAC and plumbing share one pack because the office side is nearly identical: booking, the board, tickets that need cleaning before invoicing, agreements, permits, warranty paperwork, counter purchases, and the same five software products. Electrical is listed but disabled until it has its own examples — HVAC examples in an electrician's worksheet would be exactly the slop this library exists to avoid.",
+
+  "trades": {
+    "hvac": { "label": "HVAC", "enabled": true, "tradeNoun": "heating and cooling" },
+    "plumbing": { "label": "Plumbing", "enabled": true, "tradeNoun": "plumbing" },
+    "electrical": { "label": "Electrical", "enabled": false, "tradeNoun": "electrical", "reason": "No electrical-specific research or examples yet. Write them the week the first electrical customer closes." }
+  },
+
+  "vocab": {
+    "customer": "customer", "customers": "customers",
+    "job": "job", "jobs": "jobs",
+    "worker": "tech", "workers": "techs",
+    "org": "company",
+    "system": "your dispatch software"
+  },
+
+  "personas": {
+    "t1": { "name": "Ray", "role": "owner of a two-truck {tradeNoun} company", "situation": "Runs it from his phone; QuickBooks at the kitchen table at night; one tech, Luis, on the second truck." },
+    "t2": { "name": "Carla", "role": "office manager and dispatcher at a 12-tech HVAC and plumbing company", "situation": "Housecall Pro, QuickBooks, and four spreadsheets of her own." },
+    "t3": { "name": "Denise", "role": "director of operations for a mechanical contractor with three branches", "situation": "About 70 people, ServiceTitan in three tenants, Sage Intacct, and a branch KPI workbook nobody trusts." }
+  },
+
+  "lists": {
+    "areas": [
+      "Phones and call booking", "Dispatch and the board", "Scheduling installs", "Estimates and proposals",
+      "Invoicing and collections", "Maintenance agreements / memberships", "Parts, purchasing and truck stock",
+      "Permits and inspections", "Warranty registration and claims", "Payroll, timecards and commissions",
+      "Marketing, reviews and follow-ups", "Fleet and trucks", "Hiring and HR paperwork"
+    ],
+    "systems": [
+      "ServiceTitan", "Housecall Pro", "Jobber", "FieldEdge", "Service Fusion", "Successware", "Workiz",
+      "QuickBooks Online", "QuickBooks Desktop", "Sage Intacct", "Excel or Google Sheets", "Google Calendar",
+      "A whiteboard", "Group text / WhatsApp", "Paper tickets", "Supplier portals", "Manufacturer warranty portals",
+      "GPS / fleet tracking", "Phone system or answering service", "A financing portal"
+    ],
+    "systems_t1": [
+      "My phone", "Paper tickets or a notebook", "Texts with customers", "QuickBooks", "Square or another invoicing app",
+      "Housecall Pro, Jobber, or similar", "Google Calendar", "A whiteboard", "My head"
+    ],
+    "sensitive": [
+      "Customer addresses with gate, alarm, or lockbox codes",
+      "Cards on file, or card numbers written on tickets",
+      "Financing applications (SSN, income)",
+      "Employee driving records or DOT medical cards",
+      "Refrigerant logs and EPA 608 certification copies",
+      "Payroll and commission sheets",
+      "Job-site photos of the inside of customers’ homes"
+    ],
+    "constraints": [
+      "IT or security review before anything touches our systems",
+      "Our software vendor must approve integrations (API access is gated or partner-only)",
+      "Purchasing or procurement sign-off",
+      "A union agreement covers the field staff",
+      "State licensing rules (the master’s license number on every invoice and truck)",
+      "EPA 608 and refrigerant record-keeping",
+      "DOT rules on some trucks (10,001 lb and up)",
+      "Franchise or parent-company rules",
+      "Insurance or bonding requirements"
+    ],
+    "attachments": [
+      "Last month’s job or invoice export (CSV or XLSX)",
+      "The dispatch board for one typical day (a screenshot)",
+      "The maintenance-agreement list or renewal report",
+      "The spreadsheet you named in Part 3",
+      "A completed work order with the tech’s notes (redacted)",
+      "A page of your price book or flat-rate book",
+      "An org chart, or the list of who’s in the office",
+      "A sample invoice as the customer receives it"
+    ]
+  },
+
+  "tips": {
+    "pain": [
+      "What did you re-key from a tech’s ticket into the invoice or QuickBooks this week?",
+      "What did you chase — a deposit, a part, a permit, a signature, a timecard?",
+      "Which agreement or membership renewal slipped, and how did you find out?",
+      "What callback or warranty return didn’t get attributed to anyone, or got billed by mistake?",
+      "What did a tech buy at the counter that you only learned about from the receipt?",
+      "What did you apologize to a customer for — an arrival window, a part that didn’t come in, a double-booked morning?",
+      "What lives on the whiteboard, in a notebook, or in a group text because the software doesn’t hold it?",
+      "What do you type into tomorrow’s board every evening that already exists somewhere else?"
+    ]
+  },
+
+  "overrides": {
+    "p5.input": { "help": "Name it: the completed job in the software, the tech’s notes and photos, the supplier receipt, the email from the property manager. Say how many a day and how much they vary from one tech to the next." },
+    "p3.chase": { "help": "Deposits before an install, parts on backorder, the township on a permit, a tech’s timecard, the owner’s OK on a big quote…" }
+  },
+
+  "examples": {
+    "t1.crew": { "t1": "Me and Luis. Luis runs the second truck. My wife does QuickBooks on Sunday nights and hates it." },
+    "t1.yesterday": { "t1": "6:40, texted Luis the no-cool on Elm from my truck. 8:15 the customer called asking where he was — I’d told her 8 and forgot to tell Luis. Quoted a condenser at lunch off my phone, then typed it again into QuickBooks that night. Supply house at 3 for a capacitor I thought was on the truck. Home at 7, invoices till 9." },
+    "t1.twice": { "t1": "Every estimate — once in the text to the customer, once in QuickBooks. Every part I buy at the counter — the receipt, then the invoice. And the tune-up customers: they’re in a notebook in the truck, and the ones who pay get typed into the computer." },
+    "t1.head": { "t1": "Which customers still have the old R-22 units. Who’s got a gate code. Which houses Luis shouldn’t go back to. What the guy on Maple was quoted last spring." },
+    "t1.chase": { "t1": "A deposit on the Hendricks install for two weeks. The township on the permit for last week’s furnace — I never got around to calling. Luis’s hours for Friday." },
+    "t1.sorry": { "t1": "Told a lady 8 a.m., Luis showed at 11 because I never told him. Missed a tune-up I promised in the fall because it was in the notebook, not the calendar." },
+    "t1.pick": { "t1": "The tune-ups. I’ve got maybe 60 people who paid for a fall check and I have no list I trust." },
+    "t1.time": { "t1": "An hour a night in October, and I still miss people." },
+    "t1.free": { "t1": "Quote the two jobs I never get to. Get home before the kids are in bed." },
+    "t1.notdo": { "t1": "Don’t touch how I quote — I look at the house before I give a number. And don’t text my customers without me seeing it." },
+
+    "p1.people": {
+      "t2": "12 techs (8 HVAC, 4 plumbing), 2 installers, me and the owner in the office, a bookkeeper two days a week.",
+      "t3": "About 70 across three branches: 44 techs and installers, 9 in the offices (a dispatcher and a CSR per branch, plus purchasing), a controller, and me. Branch managers report to me."
+    },
+    "p1.hours": {
+      "t2": "Phones and booking ~12 hrs · The board, mornings and the 4:30 rebuild ~10 hrs · Reviewing tickets before they can be invoiced ~6 hrs · Chasing parts, permits, and deposits ~5 hrs · Agreements and renewals ~3 hrs · Everything else ~6 hrs",
+      "t3": "Branch KPI rollup and the Monday pack ~8 hrs · Callback and warranty disputes ~5 hrs · Purchasing and PO exceptions ~5 hrs · Meetings ~8 hrs · Hiring and HR ~4 hrs · Firefighting ~10 hrs"
+    },
+    "p1.season": {
+      "t2": "June through August we can’t answer the phone fast enough, and October is somehow worse — the last of the AC calls plus every furnace that won’t light. March and April are dead, which is when we try to sell tune-ups. In season I stop doing anything that isn’t today.",
+      "t3": "July and October are the peaks; September dips; March–April we push agreements and tune-ups. In peak, the branches stop reporting and the rollup runs three weeks behind. Seasonal CSRs are trained in May and gone by September."
+    },
+
+    "p2.pain": {
+      "t2": [
+        { "n": 1, "what": "Tuesday I reviewed 23 completed tickets before they could be invoiced. Nine were missing part numbers or had labor coded as materials. I called three techs to ask what they actually did.", "freq": "Daily", "time": "1.5 hrs", "who": "The techs; the owner — invoices go out three days late" },
+        { "n": 2, "what": "Thursday I re-typed the parts from 14 supplier receipts the techs brought back from the counter into the jobs, so the invoices would carry the cost. Two receipts had no job written on them.", "freq": "Weekly", "time": "1 hr", "who": "Owner — job costing is wrong until I do it" },
+        { "n": 3, "what": "Monday I found out a Comfort Club member’s agreement had expired in July when she called, angry that she’d been charged full price. She was in my renewals spreadsheet with the wrong month.", "freq": "Monthly; more in spring and fall", "time": "2 hrs to fix, plus the customer", "who": "The customer; the tech who took the heat" },
+        { "n": 4, "what": "Filed the permit for a furnace swap four days after the install because I forgot the township needs notice first. The inspector came before the paperwork.", "freq": "Every replacement, 6–8 a month", "time": "40 min each", "who": "The install crew; the customer who took a day off" },
+        { "n": 5, "what": "Registered the warranty on a new condenser 70 days after install — ten days past the window — because the serial was on a photo on the tech’s phone, not in the job. The customer gets five years instead of ten and doesn’t know it.", "freq": "Every install", "time": "30 min when it goes right", "who": "The customer, years from now" },
+        { "n": 6, "what": "Built tomorrow’s board at 4:45 and rebuilt it at 6:10 after a no-cool came in and two techs said their afternoon jobs would run over. Nobody told me about the second one until the customer called.", "freq": "Daily in season", "time": "1 hr", "who": "Every tech; the on-call guy" }
+      ],
+      "t3": [
+        { "n": 1, "what": "Every Monday I rebuild the branch KPI workbook from three branch managers’ typed numbers — revenue, callbacks, agreements sold. Last Monday two of the three calculated callback rate differently, and the owner argued about the number for twenty minutes instead of the problem.", "freq": "Weekly", "time": "4 hrs", "who": "Three branch managers, the owner, the controller" },
+        { "n": 2, "what": "A tech replaced a coil under warranty and we never got the part credit from the distributor. I found it six weeks later under a ‘waiting on credit’ tag, along with eleven others.", "freq": "Monthly", "time": "3 hrs to chase", "who": "Controller, purchasing" },
+        { "n": 3, "what": "A recall on a May job: the original tech had moved branches, the dispatcher didn’t flag it, we billed the customer, and her review said so. The payroll adjustment took two emails and a spreadsheet.", "freq": "Weekly", "time": "1.5 hrs", "who": "The customer, both techs, payroll" },
+        { "n": 4, "what": "The north branch’s techs buy at the counter and bring receipts; the software expects a PO first. Purchasing creates POs after the fact and deletes and recreates receipts when the totals don’t match. Thursday it was 31 receipts.", "freq": "Weekly", "time": "3 hrs", "who": "Purchasing; the controller at month-end" },
+        { "n": 5, "what": "Payroll: hours and commission come out of the software as a PDF; the controller re-keys 44 techs into the payroll system because the export isn’t a file anyone can load.", "freq": "Every two weeks", "time": "5 hrs", "who": "Controller; every tech whose check is wrong" },
+        { "n": 6, "what": "A customer’s auto-renewing agreement renewed without the notice we’re supposed to send; she called to cancel and we refunded. The expiring list in the software doesn’t include auto-renewals.", "freq": "Monthly", "time": "1 hr, plus the refund", "who": "The CSRs; the customer" }
+      ]
+    },
+
+    "p3.sheets": {
+      "t2": [
+        { "n": 1, "name": "Agreements.xlsx", "tracks": "Every Comfort Club member: plan, renewal month, last visit, card on file yes/no.", "source": "The customer list in the software, my memory, the techs’ paper checklists.", "users": "The owner for the renewal push; me.", "freq": "Weekly; daily in March and September.", "breaks": "The software knows who’s a member but not when they renew or whether the spring visit happened. Two versions exist because the owner keeps his own." },
+        { "n": 2, "name": "Callbacks.xlsx", "tracks": "Every return trip: original tech, original job, what it cost us.", "source": "I add a row when I recognize the address.", "users": "The owner, for the Monday meeting.", "freq": "When I remember.", "breaks": "I don’t always recognize the address. The techs know and don’t say." },
+        { "n": 3, "name": "Permits & inspections (Google Sheet)", "tracks": "Every replacement: township, notice date, permit filed, inspection scheduled, passed.", "source": "The install schedule and my phone calls to the township.", "users": "The install lead.", "freq": "Every install.", "breaks": "Nothing reminds me. If I don’t open it, nothing happens." },
+        { "n": 4, "name": "Warranty registrations", "tracks": "Serial, install date, registered on, confirmation number, which customer.", "source": "Tech photos, the invoice, the manufacturer’s site.", "users": "Nobody but me.", "freq": "When a job closes.", "breaks": "Serials live on photos. I miss the 60-day window when it’s busy." }
+      ],
+      "t3": [
+        { "n": 1, "name": "Branch KPI rollup.xlsx", "tracks": "Weekly revenue, callbacks, agreements sold, tech productivity, per branch.", "source": "Three branch managers type their numbers in Monday morning from their own reports.", "users": "Owner, branch managers, controller.", "freq": "Weekly; three weeks behind in season.", "breaks": "Three people, three definitions of callback rate. The owner believes this sheet over the software." },
+        { "n": 2, "name": "Warranty credits tracker", "tracks": "Every part sent back to a distributor: part, job, date, credit expected, credit received.", "source": "Return records in the software with custom statuses, plus emails from the distributor.", "users": "Purchasing, controller.", "freq": "When someone remembers.", "breaks": "Credits expire. We found $11,000 uncollected last year." },
+        { "n": 3, "name": "Recall log", "tracks": "Every recall: original job, original tech, cause, cost, chargeback yes/no.", "source": "Dispatchers when they notice; the weekly recall report.", "users": "Branch managers, payroll.", "freq": "Weekly review.", "breaks": "Attribution is an argument every week." },
+        { "n": 4, "name": "Payroll bridge", "tracks": "Hours and commission per tech per period, re-keyed from the software’s PDF.", "source": "The payroll detail report.", "users": "Controller.", "freq": "Every two weeks.", "breaks": "Re-keying 44 techs’ numbers. One transposed digit and someone’s check is wrong." }
+      ]
+    },
+    "p3.truth": {
+      "t2": "Officially, Housecall Pro. In practice, my spreadsheets for anything that happens after the job closes — renewals, callbacks, permits, warranties — and the owner’s head for pricing.",
+      "t3": "ServiceTitan, officially, and it is the truth for jobs and invoices. For anything cross-branch or after-the-fact — callbacks, warranty credits, commission — the truth is a spreadsheet, and whose spreadsheet depends on who you ask."
+    },
+    "p3.copy": {
+      "t2": "Tech notes → invoice wording (every job). Receipts → job costs (every week). Every new install → the warranty portal, the permit form, and the agreements sheet, three places by hand. Hours from the techs’ texts → the timecard sheet → the bookkeeper.",
+      "t3": "Branch numbers → the rollup (weekly, 3 branches × 12 metrics). The payroll PDF → the payroll system (every two weeks, 44 people). Distributor credit emails → the warranty tracker. Recall decisions → the recall log → the payroll adjustment."
+    },
+    "p3.check": {
+      "t2": "That every completed ticket has parts, labor, and the right customer before I invoice it. That the deposit was actually collected before the install crew rolls. Skip the first and the invoice is wrong and the tech gets a call. Skip the second and we install a $9,000 system on a promise.",
+      "t3": "That a recall is flagged before the customer is billed. That a PO exists before purchasing pays the bill. That the branch numbers reconcile to the software before the owner sees them. Skip any of them and it’s an argument on Monday."
+    },
+    "p3.chase": {
+      "t2": "Deposits on installs. Techs’ timecards on Friday. Parts a tech ordered by phone that nobody wrote down. Township inspection dates. The owner’s OK on any quote over $5,000.",
+      "t3": "Branch managers for their Monday numbers. Distributors for warranty credits. Techs for the receipt that goes with a counter purchase. IT for the API approval we asked for in February."
+    },
+    "p3.sick": {
+      "t2": "Nobody else knows which agreements are up, what’s been permitted, or which callbacks are open. The board would get built, badly. Invoices would stop going out.",
+      "t3": "The rollup wouldn’t get built and the owner would go into the branches asking questions. Warranty credits would quietly expire."
+    },
+
+    "p4.pick": {
+      "t2": "Row 1 — Reading every completed ticket and fixing it by hand before it can be invoiced.",
+      "t3": "Row 1 — Rebuilding the branch KPI rollup by hand every Monday from three managers’ typed numbers."
+    },
+    "p4.backup": {
+      "t2": "Row 3 — Knowing which agreements renew this month without a spreadsheet I don’t trust.",
+      "t3": "Row 4 — Counter purchases arriving as receipts that don’t fit the PO flow."
+    },
+    "p4.why": {
+      "t2": "It’s every job, every day. It’s why invoices go out three days late, which is why deposits and collections are a mess too. And the information already exists — it’s in the tech’s notes and photos, just not in the right boxes.",
+      "t3": "It’s the number the whole company is managed by, it’s wrong or late half the time, and the raw data already sits in the software for all three branches. What doesn’t exist is the cross-branch view and one set of definitions."
+    },
+    "p4.whys": {
+      "t2": ["1. Because techs write the ticket in the truck at 4:50 with one thumb.", "2. Because the form asks for part numbers they don’t have in front of them.", "3. Because the parts came from the counter that morning and the receipt is in the door pocket.", "4. Because nobody stocks the trucks to a list, so every job needs a supply run.", "5. Because the owner thinks stocking trucks ties up cash."],
+      "t3": ["1. Because each branch runs its own reports and types the totals into my sheet.", "2. Because the cross-branch rollup lives in a product tier we don’t have.", "3. Because each branch was a separate company before we bought it, with its own definitions.", "4. Because nobody wrote down what ‘callback’ means for the whole company.", "5. Because the owner likes the sheet."]
+    },
+    "p4.root": {
+      "t2": "A completed ticket has to be read, corrected, and matched to receipts by a person before it can become an invoice. (Not #5 — that’s the owner’s call, and he’s heard it.)",
+      "t3": "Three branches’ numbers have to be pulled, redefined to one standard, and combined by a person every week. (Not #5 — the sheet can stay if it’s right.)"
+    },
+    "p4.where": {
+      "t2": "First instinct: doing the main task (invoicing). Second look: getting inputs ready. Once a ticket is clean, invoicing it takes four minutes.",
+      "t3": "First instinct: doing the main task. Second look: getting inputs ready. Combining three clean exports takes ten minutes; getting three consistent exports takes the morning."
+    },
+
+    "p5.trigger": {
+      "t2": "A tech taps ‘complete’ on a job, usually between 4 and 6 p.m., sometimes the next morning.",
+      "t3": "Monday, 7 a.m. Branch managers are supposed to have their numbers to me by 8; the owner’s meeting is at 10."
+    },
+    "p5.input": {
+      "t2": "The job in Housecall Pro: the tech’s notes (two to six lines, one thumb), zero to eight photos, the line items he remembered to add, and whatever receipts he hands me in the morning. 15–25 of these a day. The variation is the tech: two write full sentences, one writes ‘fixed.’",
+      "t3": "Three emails, sometimes a text, each with a handful of numbers typed from that branch’s reports: revenue, jobs completed, callbacks, agreements sold, average ticket. Occasionally a screenshot instead. The definitions drift — one branch counts a warranty return as a callback, one doesn’t."
+    },
+    "p5.steps": {
+      "t2": ["1. Open each completed job in order of completion.", "2. Read the notes and look at the photos to work out what was actually done.", "3. Check the line items against the notes; add the parts that are in the photos but not on the invoice.", "4. Match any receipt to the job by date and tech; add the cost.", "5. Fix labor coded as material, or the wrong flat-rate task.", "6. If I can’t tell, text the tech and wait.", "7. Mark it ready; the invoice goes out from the software; the sync to QuickBooks runs overnight.", "8. Next morning, check the QuickBooks sync errors and redo the ones that failed."],
+      "t3": ["1. Chase whoever is late.", "2. Type each branch’s numbers into the workbook.", "3. Spot-check the odd ones against the software myself, which means logging into each branch separately.", "4. Recalculate callback rate my way, because two branches do it differently.", "5. Build the two charts the owner looks at.", "6. Print the pack.", "7. Argue about the numbers at 10."]
+    },
+    "p5.output": {
+      "t2": "A clean job in Housecall Pro that becomes the invoice the customer gets by email, and the transaction QuickBooks receives overnight. Plus a row in my callbacks sheet if the notes mention a previous visit.",
+      "t3": "A printed six-page pack and the workbook on SharePoint. The owner keeps last week’s printout and compares by hand."
+    },
+    "p5.gate": {
+      "t2": "Me. Nobody checks me. The customer notices when the invoice says something the tech didn’t do. The bookkeeper notices at month-end when costs are missing.",
+      "t3": "The owner, in the meeting, by challenging numbers. The controller notices at month-end when the rollup doesn’t match the general ledger."
+    },
+    "p5.errors": {
+      "t2": "Wrong: a part billed that wasn’t used, or labor at the wrong rate — the customer calls, we credit it, the tech looks bad. Missed: a part used and never billed — we eat it and never know. Missed is worse because it’s silent.",
+      "t3": "Wrong: a callback rate of 4% that’s really 7% — we don’t act, then we act late. Missed: a branch’s agreements-sold left blank — nobody notices for a month. Wrong is worse here; the whole point of the number is to decide something."
+    },
+    "p5.numbers": {
+      "t2": "About 6 minutes a ticket, 90 minutes a day · 1 minute to check a finished one · 20 working days a month",
+      "t3": "About 4 hours by hand · 20 minutes to check a finished pack · 4–5 times a month"
+    },
+    "p5.examples": {
+      "t2": "Yes — last month’s completed jobs, with customer names and addresses removed. The owner will want to know first.",
+      "t3": "Yes — last quarter’s branch emails and workbooks, plus the reports they came from. The owner will want to see it before anyone else does."
+    },
+
+    "p6.nosoftware": {
+      "t2": "A required checklist on the tech’s job form: parts used, from truck or counter, receipt photo attached. The software has custom checklists; we never turned them on.",
+      "t3": "One written definition sheet — what counts as a callback, an agreement sold, a completed job — and a fixed report each branch runs on Monday and sends as a file, not a typed email."
+    },
+    "p6.notenough": {
+      "t2": "Two of the twelve will ignore it, and it doesn’t help with the receipts that are already in a door pocket. I’d still read every ticket, just faster.",
+      "t3": "It fixes the definitions and I still spend the morning combining three files and chasing two managers. And nothing checks that they ran the right report."
+    },
+    "p6.agree": {
+      "t2": "Agree: yes — what a clean ticket looks like isn’t controversial. Stakes: medium; a wrong invoice is fixable, a missed part is money gone. Enjoy: nobody.",
+      "t3": "Agree: no — that’s the problem, three definitions. Stakes: high per week, because the owner moves techs between branches on this number. Enjoy: no one, least of all the branch managers."
+    },
+    "p6.approver": {
+      "t2": "The owner. And the bookkeeper would want to know before anything touches QuickBooks.",
+      "t3": "The owner. The controller for anything that reads the accounting system. IT, who has been sitting on the software’s API application since February."
+    },
+    "p6.systems": {
+      "t2": "Read the completed jobs from Housecall Pro — the export is a CSV I can download myself, or the API if the owner upgrades the plan. It doesn’t need to write anything: give me a list of what to fix and I’ll fix it in the software.",
+      "t3": "Read the three branches’ scheduled report exports — they already land in my inbox as XLSX every Monday at 6, no API needed for a first version. Read only. Never write. Sage stays out of it until the controller says otherwise."
+    },
+
+    "p7.today": {
+      "t2": "Today, I have to read and correct every completed ticket by hand, which takes about 90 minutes per day, and it goes wrong when a tech’s notes don’t match the parts and I can’t reach him.",
+      "t3": "Today, I have to rebuild the three-branch KPI rollup from typed numbers by hand, which takes about 4 hours per week, and it goes wrong when two branches define the same metric differently and the owner argues about the number instead of the problem."
+    },
+    "p7.goal": {
+      "t2": "I’d want something that turns the day’s completed jobs (notes, photos, line items, receipts) into a short list of what’s wrong with each ticket and the likely fix, so that I can clean 25 tickets in under 30 minutes.",
+      "t3": "I’d want something that turns the three branches’ scheduled report exports into one rollup with one set of definitions and a flag on anything that moved more than 15%, so that I can have the pack checked and printed in under 30 minutes on Monday."
+    },
+    "p7.success": {
+      "t2": "Invoices out the same day instead of three days later. Missed parts found before the invoice, not at month-end. My 4:45 board rebuild not pushed to 6 by ticket review.",
+      "t3": "Pack done by 8:30 instead of 9:55. One definition of callback rate, and the owner stops arguing about the number. Branch numbers reconcile to the ledger at month-end without a second spreadsheet."
+    },
+    "p7.notdo": {
+      "t2": ["It should not change a ticket or send an invoice on its own — I decide.", "It should not text the techs — that’s my relationship.", "It should not touch QuickBooks."],
+      "t3": ["It should not write anything into the field software or the accounting system.", "It should not rank the branch managers — that’s a conversation, not a dashboard.", "It should not replace the printout the owner likes until he says so."]
+    },
+    "p7.time": {
+      "t2": "Sell renewals in March instead of finding expired ones in July. Build tomorrow’s board once.",
+      "t3": "Actually walk the branches. Chase the $11,000 in warranty credits. Fix the recall process instead of refereeing it."
+    },
+    "p7.stop": {
+      "t2": "If it flags things that are fine more than it flags things that are wrong. If it needs me to reformat anything first. If the owner uses it to grade the techs.",
+      "t3": "If the branches stop running the report on Monday and it silently uses last week’s. If the definitions are buried where the owner can’t see them. If it needs IT every time something changes."
+    },
+    "p7.users": {
+      "t2": "Me first. The owner would read the daily list. The bookkeeper would stop asking me for missing costs.",
+      "t3": "Me, the owner (reads), three branch managers (supply and read), the controller (reconciles)."
+    },
+    "p7.else": {
+      "t2": "We tried a bigger platform for a year and went back to Housecall Pro because of the cost and because two of the techs wouldn’t use the app. Anything that asks the techs to do more is dead on arrival. I work on a laptop in the office and my phone in the truck.",
+      "t3": "We rolled ServiceTitan out across the acquisitions in 2024; the north branch still runs its old board on a whiteboard next to the screen. Anything that depends on all three branches doing the same thing needs a way to work when one doesn’t. I’m on a laptop; the owner is on paper."
+    },
+
+    "p8.inventory": {
+      "t3": [
+        { "system": "ServiceTitan (three tenants)", "holds": "Jobs, dispatch, invoices, memberships, tech notes — per branch.", "owner": "Me; each branch manager for their tenant.", "rw": "Read only for now.", "out": "Scheduled XLSX/PDF report exports by email; API application pending with IT since February." },
+        { "system": "Sage Intacct", "holds": "General ledger, AP, branch P&L.", "owner": "Karen, controller.", "rw": "Read only — she’d never allow writes.", "out": "CSV from a saved report, on request." },
+        { "system": "Branch KPI rollup.xlsx", "holds": "Weekly numbers per branch, typed.", "owner": "Me. It is the problem.", "rw": "—", "out": "It’s on SharePoint." },
+        { "system": "Fleet tracking", "holds": "Trucks, mileage, maintenance.", "owner": "Darnell, fleet.", "rw": "Read.", "out": "CSV." },
+        { "system": "Distributor portals (two)", "holds": "Warranty claims and credits.", "owner": "Purchasing.", "rw": "Read.", "out": "Emails and PDFs; no export." }
+      ]
+    },
+    "p8.dup": { "t3": "Callback rate. The software can calculate it per branch; each branch manager calculates his own in the rollup, differently; the rollup is what the owner sees. Nobody believes either number, so we argue about it instead of fixing it." },
+    "p8.exports": { "t3": "Scheduled reports from each branch land in my inbox as XLSX every Monday at 6 — I set those up myself. Sage exports need Karen. The distributor portals export nothing." },
+
+    "p9.stakeholders": {
+      "t3": [
+        { "who": "The owner", "decides": "yes", "affected": "weekly", "pushback": "maybe", "why": "He likes the printout and distrusts numbers he didn’t see typed." },
+        { "who": "Karen, controller", "decides": "yes, for anything touching Sage", "affected": "monthly", "pushback": "likely", "why": "Burned by the 2024 rollout; wants a reconciliation before she trusts anything." },
+        { "who": "Three branch managers", "decides": "no", "affected": "weekly", "pushback": "one of the three", "why": "The north branch manager sees the rollup as a report card." },
+        { "who": "IT (outsourced)", "decides": "for API access", "affected": "no", "pushback": "slow rather than opposed", "why": "Every request is a ticket and a month." }
+      ]
+    },
+    "p9.owner": { "t3": "Me, with the north branch dispatcher as backup — she already runs the Monday reports for her branch." },
+    "p9.change": { "t3": "ServiceTitan across the acquired branches, 2024: two branches adopted it in a month; the north branch kept its whiteboard for a year because the dispatcher never got trained and nobody checked. Lesson: the rollout is done when the last branch uses it, not when the license is bought." },
+
+    "p10.metrics": {
+      "t3": [
+        { "metric": "Hours to build the Monday pack", "today": "About 4", "target": "Under half an hour", "who": "Me, weekly" },
+        { "metric": "Branches using one callback definition", "today": "1 of 3", "target": "3 of 3", "who": "Me, monthly" },
+        { "metric": "Rollup reconciles to the ledger at month-end", "today": "Not checked", "target": "Within 1%", "who": "Karen, monthly" }
+      ]
+    }
+  },
+
+  "tradeExamples": {
+    "plumbing": {
+      "t1.yesterday": { "t1": "6:30, a no-water call from a landlord — sent Danny. 9:00 I was on a water heater swap and the customer wanted to pay by card; took the number on paper. Lunch: called the township about the permit for last week’s heater, got voicemail. 2:00 sewer camera on a main line, quoted the repair from the truck, texted it. Home at 6:30, typed the day into QuickBooks." },
+      "t1.twice": { "t1": "Every quote — the text to the customer and then QuickBooks. Every heater — the receipt from the supply house, the invoice, and the warranty registration on the manufacturer’s site." },
+      "t1.head": { "t1": "Which houses still have galvanized pipe. Whose backflow test is due. Which customer’s main line we scoped last year and told to budget for. Where the shutoff is at the Miller place." },
+      "t1.chase": { "t1": "The township on a heater permit. A property manager for three invoices from August. A part on backorder that the customer calls about every day." },
+      "t1.sorry": { "t1": "Missed a backflow test I’d promised in the spring — it was on a sticky note. Showed up to a job without the right fittings and made the customer wait while I ran to the supply house." },
+      "t1.pick": { "t1": "The permits. Every heater needs the township told first, the permit filed within five days, and an inspection booked, and I keep all of it in my head." },
+      "t1.time": { "t1": "An hour or two a week, and a lot of worrying." },
+      "p1.season": {
+        "t2": "The week of Thanksgiving is our worst — the Monday before and the Monday after, disposals, clogs, and mains. Then the first hard freeze. Summer is slower on service but heavy on remodel rough-ins.",
+        "t3": "Thanksgiving week and the first freeze are the service peaks; summer is remodel rough-ins. In peak, the branches stop reporting and the rollup runs three weeks behind."
+      },
+      "p2.pain": {
+        "t2": [
+          { "n": 1, "what": "Tuesday I reviewed 19 completed tickets before invoicing. Six had no fixture or part listed — just ‘replaced.’ I texted three techs to ask what they replaced.", "freq": "Daily", "time": "1.5 hrs", "who": "The techs; the owner" },
+          { "n": 2, "what": "A water heater went in on the 3rd; I gave the township notice on the 9th because the install lead didn’t tell me it was done. Past the five-day window. The inspection had to be rescheduled and the customer took a second day off.", "freq": "Every heater, 8–10 a month", "time": "45 min", "who": "The install lead; the customer" },
+          { "n": 3, "what": "Backflow tests: I keep the due dates in a spreadsheet built from last year’s tests. Two commercial customers got notices from the water department before I called them.", "freq": "Monthly", "time": "2 hrs, plus the embarrassment", "who": "Two customers; the owner" },
+          { "n": 4, "what": "Re-typed 14 supply-house receipts into the jobs so the invoices carried the cost. Two had no job number written on them.", "freq": "Weekly", "time": "1 hr", "who": "Owner" },
+          { "n": 5, "what": "A property manager disputed three time-and-materials invoices because the tickets didn’t show hours on site — we had drive time and wait time nobody logged. Took a week to settle for less.", "freq": "Monthly", "time": "3 hrs, plus the write-down", "who": "Owner; the tech who was there" },
+          { "n": 6, "what": "Rebuilt the board at 6:10 after a no-water and a sewer backup came in and two techs said their afternoons would run over.", "freq": "Daily", "time": "1 hr", "who": "Every tech" }
+        ]
+      },
+      "p3.sheets": {
+        "t2": [
+          { "n": 1, "name": "Backflow tests.xlsx", "tracks": "Every device we test: customer, device, water purveyor, last test, due date.", "source": "Last year’s test reports and the purveyor’s letters.", "users": "Me; the tech who does the tests.", "freq": "When a test comes in.", "breaks": "Nothing reminds me. The customer hears from the water department before they hear from us." },
+          { "n": 2, "name": "Permits & inspections (Google Sheet)", "tracks": "Every heater and every rough-in: township, notice date, permit filed, inspection scheduled, passed.", "source": "The install schedule and my phone calls to the township.", "users": "The install lead.", "freq": "Every install.", "breaks": "The five-day clock starts when the heater goes in, and I find out when the tech mentions it." },
+          { "n": 3, "name": "Heater warranties", "tracks": "Serial, install date, the invoice number that proves the install date, distributor.", "source": "The tech’s photo of the label and the invoice.", "users": "Nobody but me.", "freq": "When a job closes.", "breaks": "The claim goes through the distributor, and they want the install invoice. If I can’t find it, the clock runs from the manufacture date instead." },
+          { "n": 4, "name": "Agreements.xlsx", "tracks": "Every service-plan customer: plan, renewal month, last visit.", "source": "The customer list in the software, my memory.", "users": "The owner; me.", "freq": "Weekly.", "breaks": "The software knows who’s on a plan but not when they renew." }
+        ]
+      }
+    }
+  },
+
+  "compliance": [
+    "NJ: HVACR businesses must have a licensed Master HVACR Contractor as bona fide representative; the license number and ‘HVACR Contractor’ go on every truck, invoice, and ad. Plumbing: a licensed master plumber with at least 10% ownership; name and license number on every invoice, both sides of every truck.",
+    "NJ: like-for-like replacement of water heaters, furnaces, A/C units and condensers is ‘minor work’ — notify the local construction office before starting, file the permit within five business days, request the inspection.",
+    "EPA Section 608: keep a copy of each tech’s certification at the place of business for three years after they leave; refrigerant disposal and 50-lb-plus appliance records kept three years.",
+    "Manufacturer warranties: Carrier 90 days and Goodman 60 days to register for the 10-year parts term (else 5); Rheem water heaters run from the install date only with the installer’s invoice as proof; claims go through the installing contractor and distributor."
+  ],
+  "seasonality": "HVAC: activity climbs from a February low; July is the cooling peak and October the busiest month overall (late cooling calls plus first heating start-ups); September dips; March–April is the shoulder season used for tune-ups and agreement sales. Plumbing: the Mondays before and after Thanksgiving are the sharpest spikes; remodel rough-ins in summer.",
+
+  "sources": [
+    { "title": "R&J Plumbing — Plumbing Service Coordinator / QuickBooks Specialist (job posting)", "url": "https://www.plumbingjobs.org/jobs/plumbing-service-coordinator-quickbooks-specialist-r-j-plumbing-3ec1761f", "used_for": "Pre-billing ticket review, permits, warranty registration, agreements, timecards" },
+    { "title": "Homestead Service Partners — Office Manager, commercial HVAC (job posting)", "url": "https://homesteadsp.com/office-manager/", "used_for": "Invoice within two days, AR, PO reconciliation, KPI reports, 8–20 person shop" },
+    { "title": "Uplifting Air — CSR/Dispatcher (job posting)", "url": "https://www.careerbuilder.com/job-details/hvac-experienced-customer-service-representative-dispatcher-san-antonio-fl--0cf4fdd7-654c-4f47-b9b4-b888f3e08e3c", "used_for": "Double entry into FieldEdge and QuickBooks" },
+    { "title": "Blue Sky Plumbing & Heating — Service Coordinator (job posting)", "url": "https://www.careerbuilder.com/job-details/service-coordinator-wheat-ridge-co--507f1992-d7c9-4b79-91ac-20e6e5063402", "used_for": "Permits and backflow certifications, next-day board with managers" },
+    { "title": "ServiceTitan Community — tracking extended warranty labor claims", "url": "https://community.servicetitan.com/t5/General-Office/Tracking-Extended-Warranty-Labor-Claims/m-p/19613/highlight/true", "used_for": "Warranty credits tracked with tags, statuses, bins" },
+    { "title": "ServiceTitan Community — recalls SOP", "url": "https://community.servicetitan.com/t5/General/Seeking-Best-Practices-and-SOPs-for-Handling-Recalls-Including/td-p/45542", "used_for": "Callback attribution, weekly review, payroll adjustments" },
+    { "title": "ServiceTitan Community — purchasing / counter receipts", "url": "https://community.servicetitan.com/t5/Inventory/Can-someone-explain-service-titans-thinking-on-the-purchsing/m-p/30855", "used_for": "POs created after the fact for counter purchases" },
+    { "title": "ServiceTitan Community — auto-renewal notices", "url": "https://community.servicetitan.com/t5/Memberships-or-Service/Notify-Customer-of-Automatic-Membership-Renewal/td-p/21511", "used_for": "Auto-renewals missing from the expiring list" },
+    { "title": "ServiceTitan help — Rollup Reporting (Enterprise Hub)", "url": "https://help.servicetitan.com/how-to/rollup-reporting", "used_for": "Cross-branch rollup only in a higher tier" },
+    { "title": "r/servicetitan — payroll re-keyed into QuickBooks", "url": "https://www.reddit.com/r/servicetitan/comments/1bzshpx/servicetitan_payroll/", "used_for": "Payroll bridge spreadsheet" },
+    { "title": "r/servicetitan — exports are PDF/XLS only", "url": "https://www.reddit.com/r/servicetitan/comments/1avspok/has_anyone_successfully_pulled_data_from/", "used_for": "Scheduled report exports as the first-version data source" },
+    { "title": "Housecall Pro — service plan renewals", "url": "https://help.housecallpro.com/en/articles/6879916-service-plan-renewals", "used_for": "Renewals are a manual button; plans on Max only" },
+    { "title": "Housecall Pro — API overview (Max plan only)", "url": "https://help.housecallpro.com/en/articles/8505035-api-overview", "used_for": "API gated by plan; CSV export available" },
+    { "title": "Housecall Pro — Capterra reviews", "url": "https://www.capterra.com/p/140363/HouseCall-Pro/reviews/", "used_for": "QuickBooks sync errors and duplicate entry" },
+    { "title": "Jobber — HVAC service contract guide", "url": "https://www.getjobber.com/academy/hvac/hvac-service-contract/", "used_for": "‘Set a reminder for yourself’ — no renewal automation" },
+    { "title": "r/Plumbing — two-man operation, invoicing as a second job", "url": "https://www.reddit.com/r/Plumbing/comments/1rsc332/running_a_twoman_plumbing_operation_how_do_you/", "used_for": "Ray persona: QuickBooks at night, spreadsheets from the truck" },
+    { "title": "r/Plumbing — nightly transfer of invoices into QuickBooks", "url": "https://www.reddit.com/r/Plumbing/comments/csmzd3/what_do_you_business_owners_use_to_invoice_i_need/", "used_for": "Ray persona" },
+    { "title": "r/HVAC — solo owner on Square, equipment history, double-booking", "url": "https://www.reddit.com/r/HVAC/comments/1m1qdhf/advice_needed_for_crm_and_organization_in_hvac/", "used_for": "Ray persona, systems_t1 list" },
+    { "title": "r/HVAC — unregistered equipment warranties", "url": "https://www.reddit.com/r/HVAC/comments/1l7l1dw/extended_warranty_registration/", "used_for": "Warranty registration pain" },
+    { "title": "Service Business Mastery — dispatcher responsibilities", "url": "https://servicebusinessmastery.com/dispatcher-responsibilities-and-tips/", "used_for": "Loose ends: parts, quotes, callbacks; four-hour windows" },
+    { "title": "Heating Help forum — what should be in a service van", "url": "https://forum.heatinghelp.com/discussion/63487/what-should-be-in-a-service-vans-stock", "used_for": "Truck stock lists, supply-house runs" },
+    { "title": "Contractor Magazine — what plumbing contractors leave on the table", "url": "https://www.contractormag.com/management/best-practices/article/55390232/what-plumbing-contractors-are-leaving-on-the-table-between-service-calls", "used_for": "T&M invoice disputes, unlogged drive and wait time" },
+    { "title": "Contractor Magazine — service agreements tracked by hand", "url": "https://www.contractormag.com/management/best-practices/article/21214365/solutions-for-successful-service-agreements", "used_for": "Agreements as an endless loop of notices and entries" },
+    { "title": "Samsara — HVAC peak season from 65M service trips", "url": "https://www.samsara.com/blog/peak-season-for-hvac", "used_for": "July cooling peak, October busiest, September dip" },
+    { "title": "ACHR News — shoulder seasons", "url": "https://www.achrnews.com/articles/129283-fighting-through-stagnant-shoulder-seasons", "used_for": "March–April slow season, tune-up pushes (incl. a Deptford NJ contractor)" },
+    { "title": "ServiceTitan — Thanksgiving plumbing data", "url": "https://www.servicetitan.com/blog/brown-friday-plumbing-data", "used_for": "Mondays before and after Thanksgiving as the plumbing spikes" },
+    { "title": "N.J.A.C. 5:23-2.17A — minor work", "url": "https://www.law.cornell.edu/regulations/new-jersey/N-J-A-C-5-23-2-17A", "used_for": "Notice before starting, permit within five business days, inspection" },
+    { "title": "N.J.A.C. 13:32A-5-3 — HVACR license number on trucks, invoices, ads", "url": "https://www.law.cornell.edu/regulations/new-jersey/N-J-A-C-13-32A-5-3", "used_for": "Constraints list" },
+    { "title": "N.J.A.C. 13:32-3.1 — master plumber name and license on vehicles and invoices", "url": "https://www.law.cornell.edu/regulations/new-jersey/N-J-A-C-13-32-3-1", "used_for": "Constraints list" },
+    { "title": "N.J.A.C. 13:32-1.4 — licensed-only plumbing work incl. water heaters and backflow preventers", "url": "https://www.law.cornell.edu/regulations/new-jersey/N-J-A-C-13-32-1-4", "used_for": "Plumbing examples" },
+    { "title": "EPA — Section 608 technician certification and record-keeping", "url": "https://www.epa.gov/section608/section-608-technician-certification-requirements", "used_for": "Certification copies kept three years; sensitive list" },
+    { "title": "EPA — recordkeeping and reporting, stationary refrigeration", "url": "https://www.epa.gov/section608/recordkeeping-and-reporting-requirements-stationary-refrigeration", "used_for": "Refrigerant logs" },
+    { "title": "Goodman — warranty registration within 60 days", "url": "https://www.goodmanmfg.com/resources/hvac-learning-center/warranty/the-air-conditioner-limited-warranty---the-why-when-how", "used_for": "60-day window in Carla’s example" },
+    { "title": "Carrier — homeowner warranty (90 days to register)", "url": "https://www.carrier.com/residential/en/us/homeowner-resources/warranty/", "used_for": "Compliance note" },
+    { "title": "Rheem — water heater warranty runs from install date with proof", "url": "https://files.myrheem.com/webpartners/ProductDocuments/5B5E5868-D97B-4418-82FA-A2523B25C6B1.pdf", "used_for": "Plumbing warranty sheet example" },
+    { "title": "Bradford White — warranty FAQ (claims via distributor)", "url": "https://www.bradfordwhite.com/warranty-faqs/", "used_for": "Plumbing warranty sheet example" },
+    { "title": "PCI SSC — storage of sensitive authentication data", "url": "https://www.pcisecuritystandards.org/faq/articles/Frequently_Asked_Question/for-pci-dss-why-is-storage-of-sensitive-authentication-data-sad-after-authorization-not-permitted-even-when-there-are-no-primary-account-numbers-pans-in-an-environment/", "used_for": "Sensitive list: card numbers on tickets" },
+    { "title": "FMCSA — do I need a USDOT number", "url": "https://www.fmcsa.dot.gov/registration/do-i-need-usdot-number", "used_for": "Constraints list: DOT at 10,001 lb" }
+  ]
+}

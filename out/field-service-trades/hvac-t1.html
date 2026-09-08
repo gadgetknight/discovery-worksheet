@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Discovery worksheet engine — template
+  Version 1.1.1 — 2026-09-08
+  This file is the renderer. compose/build.mjs injects a composed CONFIG and
+  SCHEMA (spine + tier profile + vertical pack) at the two placeholders below
+  and writes a finished worksheet to out/. Do not hand-edit generated files;
+  edit the library or this template and rebuild.
+
+  CHANGELOG
+  1.1.1  2026-09-08  Fix: literal newline in the call-option mailto body broke
+                     the whole script (Tier 1 never started). Stepper now hides
+                     the questions until Start and collapses the masthead once
+                     started, so each question gets the screen to itself.
+  1.1.0  2026-09-08  Template extracted from the 1.0.1 generic worksheet.
+                     Adds: masthead rendered from the tier profile; ?name=&co=
+                     personalization; stepper mode (one question per screen)
+                     for Tier 1; sittings for Tier 3; ?interview=1 mode;
+                     pack/tier/trade metadata in the exports.
+-->
+<title>Where the Time Goes · HVAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root{
+    --bg:#F4F6F8; --paper:#FFFFFF;
+    --ink:#1C2430; --ink-2:#4A5563; --ink-3:#7B8794;
+    --line:#DCE2E8; --line-2:#C3CCD6;
+    --accent:#1D5C86; --accent-ink:#154A6D; --accent-tint:#E8F0F7; --accent-tint-2:#D2E1EE;
+    --sand:#F7F2E8; --sand-ink:#6F5426; --sand-line:#E6DAC2;
+    --ok:#2A7A4B; --ok-tint:#E3F2E9;
+    --warn:#A86A0B; --warn-tint:#FBF1DC;
+    --bad:#A83A3A; --bad-tint:#F8E5E5;
+    --radius:6px;
+    --font-display:"Zilla Slab", Georgia, "Times New Roman", serif;
+    --font-body:"Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --measure:68ch;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:17px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--font-display); line-height:1.15; margin:0; text-wrap:balance; letter-spacing:-.005em}
+  h1{font-size:clamp(34px,5vw,46px); font-weight:700}
+  h2{font-size:clamp(25px,3.4vw,30px); font-weight:600}
+  h3{font-size:20px; font-weight:600}
+  p{margin:0 0 12px; max-width:var(--measure)}
+  a{color:var(--accent)}
+  .eyebrow{font-size:12.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--accent)}
+  .muted{color:var(--ink-2)}
+  .small{font-size:15px}
+  .wrap{max-width:860px; margin:0 auto; padding:0 20px}
+
+  /* ---------- sticky bar ---------- */
+  .bar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .bar-in{display:flex; align-items:center; gap:14px; padding:10px 20px; max-width:860px; margin:0 auto}
+  .bar-title{font-family:var(--font-display); font-weight:600; font-size:17px; white-space:nowrap}
+  .prog{flex:1; min-width:60px; display:flex; flex-direction:column; gap:4px}
+  .track{height:6px; background:var(--line); border-radius:3px; overflow:hidden}
+  .fill{height:100%; width:0%; background:var(--accent); border-radius:3px; transition:width .25s ease}
+  .prog-text{font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .prog-text .short{display:none}
+  @media (max-width:640px){ .prog-text .long{display:none} .prog-text .short{display:inline} }
+  .pill{font-size:13px; padding:3px 9px; border-radius:999px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .pill.ok{background:var(--ok-tint); color:var(--ok)}
+  .pill.dim{background:var(--bg); color:var(--ink-2); border:1px solid var(--line)}
+  .pill.busy{background:var(--warn-tint); color:var(--warn)}
+  .bar select{font:inherit; font-size:14px; padding:6px 8px; border:1px solid var(--line-2); border-radius:var(--radius); background:var(--paper); color:var(--ink); max-width:180px}
+  @media (max-width:640px){
+    .bar-title{display:none}
+    .pill.elapsed{display:none}
+    .bar-in{gap:10px; padding:10px 14px}
+    .bar select{max-width:120px}
+  }
+
+  /* ---------- masthead ---------- */
+  .mast{padding:44px 20px 26px}
+  .mast .lede{font-size:20px; color:var(--ink-2); margin:14px 0 0; max-width:60ch}
+  .howto{
+    margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  @media (max-width:700px){ .howto{grid-template-columns:1fr} }
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px 18px}
+  .card .eyebrow{color:var(--ink-3); display:block; margin-bottom:8px}
+  .card ul{margin:0; padding-left:18px}
+  .card li{margin-bottom:6px}
+  .card li:last-child{margin-bottom:0}
+  .rule-card{background:var(--sand); border-color:var(--sand-line)}
+  .rule-card .eyebrow{color:var(--sand-ink)}
+
+  /* ---------- parts ---------- */
+  .part{padding:36px 0 8px; border-top:3px solid var(--accent); margin-top:36px; scroll-margin-top:72px}
+  .part-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:6px}
+  .part-num{font-family:var(--font-display); font-weight:700; color:var(--accent); font-size:14px; letter-spacing:.08em; text-transform:uppercase}
+  .part-min{font-size:13px; color:var(--ink-2); border:1px solid var(--line-2); border-radius:999px; padding:1px 9px; font-variant-numeric:tabular-nums}
+  .part .intro{font-size:18px; color:var(--ink-2); margin:10px 0 22px; max-width:64ch}
+  .callout{border-radius:8px; padding:14px 18px; margin:0 0 22px; max-width:760px}
+  .callout .eyebrow{display:block; margin-bottom:8px}
+  .callout ul{margin:0; padding-left:18px}
+  .callout li{margin-bottom:6px; font-size:16px}
+  .callout li:last-child{margin-bottom:0}
+  .callout.tips{background:var(--sand); border:1px solid var(--sand-line)}
+  .callout.tips .eyebrow{color:var(--sand-ink)}
+  .callout.rule{background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--accent)}
+  .callout.rule .eyebrow{color:var(--accent)}
+  .callout p{margin:0; font-size:16px}
+  .aside{font-style:italic; color:var(--ink-2); margin:0 0 22px; max-width:64ch}
+
+  /* ---------- questions ---------- */
+  .q{margin:0 0 30px; max-width:760px}
+  .q-label{display:block; font-weight:600; font-size:17.5px; margin-bottom:4px; text-wrap:pretty}
+  .q-label .opt{font-weight:400; color:var(--ink-3); font-size:14px; margin-left:6px}
+  .q-help{font-size:15px; color:var(--ink-2); margin:0 0 10px; max-width:var(--measure)}
+  input[type=text], input[type=email], input[type=number], textarea, select{
+    font:inherit; color:var(--ink); background:var(--paper);
+    border:1px solid var(--line-2); border-radius:var(--radius);
+    padding:9px 12px; width:100%;
+  }
+  input[type=number]{width:auto; min-width:110px; font-variant-numeric:tabular-nums}
+  textarea{min-height:92px; resize:vertical; line-height:1.5; display:block; field-sizing:content}
+  textarea.tall{min-height:150px}
+  textarea.short{min-height:60px}
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, .choice:focus-within{
+    outline:2px solid var(--accent); outline-offset:2px; border-color:var(--accent);
+  }
+  ::placeholder{color:var(--ink-3); opacity:1}
+  .unit{margin-left:8px; color:var(--ink-2); font-size:15px}
+  .row-fields{display:flex; flex-wrap:wrap; gap:14px 22px}
+  .row-fields .f{display:flex; flex-direction:column; gap:4px; min-width:150px}
+  .row-fields .f label{font-size:14.5px; color:var(--ink-2)}
+  .row-fields .f .inline{display:flex; align-items:center}
+
+  /* choices */
+  .choices{display:flex; flex-direction:column; gap:6px}
+  .choices.inline{flex-direction:row; flex-wrap:wrap; gap:8px}
+  .choice{
+    display:flex; align-items:flex-start; gap:10px; padding:8px 12px;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    cursor:pointer; font-size:16px; line-height:1.4;
+  }
+  .choice:hover{border-color:var(--line-2)}
+  .choice input{margin:4px 0 0; flex:none; accent-color:var(--accent); width:16px; height:16px}
+  .choice.checked{border-color:var(--accent); background:var(--accent-tint)}
+  .choice .sub{display:block; font-size:14px; color:var(--ink-2)}
+  .other-wrap{margin-top:8px; display:flex; gap:8px; align-items:center}
+  .other-wrap label{font-size:15px; color:var(--ink-2); white-space:nowrap}
+
+  /* scale */
+  .scale{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .scale .choice{padding:8px 0; width:44px; justify-content:center; font-variant-numeric:tabular-nums; font-weight:600}
+  .scale .choice input{position:absolute; opacity:0; width:0; height:0; margin:0}
+  .scale-ends{display:flex; justify-content:space-between; font-size:13px; color:var(--ink-3); max-width:250px; margin-top:4px}
+
+  /* yes/no rows */
+  .yn{display:flex; flex-direction:column; gap:6px}
+  .yn-row{display:flex; align-items:center; gap:12px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:8px 12px; flex-wrap:wrap}
+  .yn-row .t{flex:1; min-width:200px; font-size:16px}
+  .yn-row label{display:flex; align-items:center; gap:6px; font-size:15px; cursor:pointer}
+  .yn-row input{accent-color:var(--accent)}
+
+  /* fill-in sentence */
+  .fill{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px 18px; font-size:18px; line-height:2.1}
+  .fill input{
+    display:inline-block; width:auto; min-width:120px; max-width:100%;
+    padding:2px 8px; margin:0 2px; font-size:17px; line-height:1.5;
+    border:0; border-bottom:2px solid var(--accent-tint-2); border-radius:0; background:var(--accent-tint);
+    field-sizing:content;
+  }
+  .fill input:focus-visible{outline:none; border-bottom-color:var(--accent); background:#fff}
+
+  /* tables */
+  .tbl{border:1px solid var(--line); border-radius:8px; background:var(--paper); overflow:hidden}
+  .tbl-head, .tbl-row{display:grid; gap:0; align-items:stretch}
+  .tbl-head{background:var(--bg); border-bottom:1px solid var(--line); font-size:13.5px; font-weight:600; color:var(--ink-2)}
+  .tbl-head > div{padding:8px 10px; border-right:1px solid var(--line)}
+  .tbl-head > div:last-child, .tbl-row > div:last-child{border-right:0}
+  .tbl-row{border-bottom:1px solid var(--line)}
+  .tbl-row:last-child{border-bottom:0}
+  .tbl-row > div{padding:0; border-right:1px solid var(--line); display:flex}
+  .tbl-row .n{align-items:flex-start; justify-content:center; padding:10px 0; color:var(--ink-3); font-size:14px; font-variant-numeric:tabular-nums; background:var(--bg)}
+  .tbl-row input, .tbl-row textarea{border:0; border-radius:0; width:100%; min-height:44px; background:transparent; padding:9px 10px; font-size:15.5px}
+  .tbl-row textarea{min-height:64px; resize:none}
+  .tbl-row input:focus-visible, .tbl-row textarea:focus-visible{outline-offset:-2px}
+  .tbl-foot{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border-top:1px solid var(--line); background:var(--bg); font-size:14px; color:var(--ink-2)}
+  @media (max-width:720px){
+    .tbl-head{display:none}
+    .tbl-row{grid-template-columns:1fr!important; padding:8px 0}
+    .tbl-row > div{border-right:0; flex-direction:column; padding:2px 10px}
+    .tbl-row > div::before{content:attr(data-label); font-size:13.5px; font-weight:600; color:var(--ink-2); padding:6px 0 0}
+    .tbl-row .n{background:transparent; flex-direction:row; align-items:baseline; gap:5px; justify-content:flex-start; padding:8px 10px 0; font-weight:700; color:var(--accent); font-size:15px}
+    .tbl-row .n::before{content:"Row"; color:var(--accent); padding:0; font-size:15px; font-weight:700}
+    .tbl-row input, .tbl-row textarea{border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; margin:4px 0 6px}
+  }
+
+  /* example disclosure */
+  details.ex{margin-top:10px; border:1px solid var(--accent-tint-2); background:var(--accent-tint); border-radius:8px; max-width:760px}
+  details.ex summary{cursor:pointer; padding:9px 14px; font-size:13.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-ink); list-style:none; display:flex; align-items:center; gap:8px}
+  details.ex summary::-webkit-details-marker{display:none}
+  details.ex summary::before{content:""; width:0; height:0; border-left:6px solid var(--accent-ink); border-top:5px solid transparent; border-bottom:5px solid transparent; transition:transform .15s}
+  details.ex[open] summary::before{transform:rotate(90deg)}
+  details.ex .ex-body{padding:0 16px 14px; font-size:15.5px; color:var(--ink); line-height:1.5}
+  details.ex .ex-body p{margin:0 0 8px; max-width:none}
+  details.ex .ex-body p:last-child{margin-bottom:0}
+  details.ex .ex-body ol, details.ex .ex-body ul{margin:0; padding-left:20px}
+  details.ex .ex-body li{margin-bottom:5px}
+  details.ex .ex-body .exrow{margin-bottom:8px}
+  details.ex .ex-body .exrow b{color:var(--accent-ink)}
+  details.ex .ex-body .exrow .m{color:var(--ink-2)}
+
+  /* footer / actions */
+  .finish{margin:44px auto 0; padding:28px 20px 60px; border-top:3px solid var(--accent)}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
+  button{font:inherit; cursor:pointer; border-radius:var(--radius); padding:10px 16px; border:1px solid var(--line-2); background:var(--paper); color:var(--ink); font-weight:600; font-size:16px}
+  button:hover{border-color:var(--accent); color:var(--accent-ink)}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  button.primary:hover{background:var(--accent-ink); color:#fff}
+  button.danger{color:var(--bad); border-color:var(--bad-tint); background:var(--bad-tint)}
+  button.danger:hover{border-color:var(--bad)}
+  button.link{border:0; background:none; padding:6px 4px; font-weight:400; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px}
+  button.link:hover{color:var(--accent-ink)}
+  .status{font-size:15px; color:var(--ink-2); min-height:1.4em; margin-top:10px}
+  .status.ok{color:var(--ok)}
+  .status.bad{color:var(--bad)}
+
+  /* review overlay */
+  .overlay{position:fixed; inset:0; background:rgba(28,36,48,.55); z-index:50; overflow:auto; padding:3vh 12px}
+  .sheet{max-width:900px; margin:0 auto; background:var(--paper); border-radius:10px; box-shadow:0 18px 50px rgba(0,0,0,.25); display:flex; flex-direction:column; max-height:94vh}
+  .sheet-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:18px 22px 12px; border-bottom:1px solid var(--line)}
+  .sheet-head p{margin:4px 0 0; font-size:15px; color:var(--ink-2)}
+  .sheet-body{padding:14px 22px; overflow:auto; flex:1}
+  .sheet-body textarea{width:100%; min-height:46vh; font-family:ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace; font-size:13.5px; line-height:1.5; field-sizing:fixed; resize:vertical}
+  .sheet-foot{padding:12px 22px 18px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  .sheet-foot .grow{flex:1}
+  .x{border:0; background:none; font-size:26px; line-height:1; padding:2px 8px; color:var(--ink-3)}
+  .x:hover{color:var(--ink)}
+
+  /* ---------- engine additions (1.1.0) ---------- */
+  [hidden]{display:none!important}
+  .hi{font-family:var(--font-display); font-size:26px; font-weight:600; margin:10px 0 0; color:var(--ink); line-height:1.2}
+  .after{margin-top:16px; border:1px solid var(--line); border-radius:8px; padding:12px 16px; background:var(--paper); max-width:66ch; font-size:16px}
+  .banner{margin-top:14px; background:var(--accent); color:#fff; border-radius:8px; padding:10px 14px; font-weight:600; max-width:66ch}
+  .howto.one{grid-template-columns:1fr}
+  .mast-actions{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:18px}
+  #startBtn{font-size:17px; padding:12px 24px}
+  body.stepper .part{border-top:0; padding:0; margin:0}
+  body.stepper .part > :not(.q){display:none}
+  body.stepper .q{display:none; max-width:720px}
+  body.stepper .q.on{display:block}
+  body.stepper .q-label{font-family:var(--font-display); font-size:24px; line-height:1.25; font-weight:600; margin-bottom:6px}
+  body.stepper .q-help{font-size:16px}
+  body.stepper textarea{min-height:160px; font-size:17px}
+  body.stepper .choices .choice{font-size:17px; padding:12px 14px}
+  body.stepper .mast .lede{font-size:18px}
+  body.stepper:not(.started) #app{display:none}
+  body.stepper.started .mast .lede, body.stepper.started .howto, body.stepper.started .after, body.stepper.started .mast-actions{display:none}
+  body.stepper.started .mast{padding-bottom:12px}
+  .stepnav{display:none; align-items:center; gap:12px; max-width:720px; margin:18px 0 40px}
+  body.stepper .stepnav{display:flex}
+  .stepnav .btn2{font:inherit; font-weight:600; border-radius:6px; padding:13px 20px; border:1px solid var(--line-2); background:var(--paper); color:var(--ink); cursor:pointer; min-width:110px}
+  .stepnav .btn2.pri{background:var(--accent); border-color:var(--accent); color:#fff; margin-left:auto}
+  .stepnav .btn2:disabled{opacity:.4; cursor:default}
+  .stepnav .stepcount{color:var(--ink-2); font-variant-numeric:tabular-nums}
+  .sitnav{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px}
+  .sitcard{font:inherit; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; cursor:pointer; display:flex; flex-direction:column; gap:2px}
+  .sitcard b{font-family:var(--font-display); font-size:18px}
+  .sitcard small{color:var(--ink-2)}
+  .sitcard .sitprog{font-size:13px; color:var(--accent-ink); font-variant-numeric:tabular-nums}
+  .sitting-divider{margin-top:44px; border-top:3px solid var(--ink); padding-top:14px}
+  .sitting-divider .eyebrow{color:var(--ink)}
+  .sitting-divider p{color:var(--ink-2); max-width:64ch}
+  @media (max-width:600px){ .sitnav{grid-template-columns:1fr} }
+
+  /* print view */
+  #printview{display:none}
+  @media print{
+    body{background:#fff; font-size:12pt}
+    .bar, .mast, #app, .finish, .overlay{display:none!important}
+    #printview{display:block; max-width:none}
+    #printview h1{font-size:22pt; margin-bottom:4pt}
+    #printview h2{font-size:15pt; margin:18pt 0 8pt; border-top:1.5pt solid #1D5C86; padding-top:8pt; page-break-after:avoid}
+    #printview .pq{font-weight:700; margin:9pt 0 2pt; page-break-after:avoid}
+    #printview .pa{white-space:pre-wrap; margin:0 0 4pt 0; color:#111}
+    #printview .pa.empty{color:#888; font-style:italic}
+    #printview ol{margin:2pt 0 6pt 0}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="bar-title">Where the Time Goes</div>
+    <div class="prog">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="prog-text" id="progText">0 of 0 answered</div>
+    </div>
+    <span class="pill dim elapsed" id="elapsed" title="Time since your first answer">0 min</span>
+    <span class="pill dim" id="saved">Not started</span>
+    <select id="jump" aria-label="Jump to a part"><option value="">Jump to…</option></select>
+  </div>
+</div>
+
+<header class="mast wrap">
+  <span class="eyebrow" id="mastEyebrow"></span>
+  <h1 style="margin-top:8px" id="mastTitle">Where the Time Goes</h1>
+  <p class="hi" id="hi" hidden></p>
+  <p class="lede" id="lede"></p>
+  <div class="howto" id="howto">
+    <div class="card" id="howtoCard"><span class="eyebrow">How this works</span><ul id="howtoList"></ul></div>
+    <div class="card rule-card" id="rulesCard"><span class="eyebrow">Three ground rules</span><ul id="rulesList"></ul></div>
+  </div>
+  <div class="after" id="afterBox" hidden><b>What happens after.</b> <span id="afterText"></span></div>
+  <div class="banner" id="interviewBanner" hidden></div>
+  <div class="mast-actions"><button class="primary" id="startBtn" hidden>Start</button><button class="link" id="callBtn" hidden></button></div>
+</header>
+
+<div class="sitnav wrap" id="sitnav" hidden></div>
+
+<main id="app" class="wrap"></main>
+
+<section class="finish wrap" id="finish">
+  <span class="eyebrow">You’re done</span>
+  <h2 style="margin-top:6px">Review &amp; send</h2>
+  <p class="muted" id="finishText"></p>
+  <div class="actions">
+    <button class="primary" id="btnReview">Review &amp; send my answers</button>
+    <button id="btnPrint">Print / save as PDF</button>
+    <button class="link" id="btnClear">Clear all answers</button>
+  </div>
+  <div class="status" id="finishStatus"></div>
+</section>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <div>
+        <h3 id="sheetTitle">Your answers, ready to send</h3>
+        <p id="sheetSub"></p>
+      </div>
+      <button class="x" id="btnClose" aria-label="Close">×</button>
+    </div>
+    <div class="sheet-body">
+      <textarea id="exportText" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="sheet-foot">
+      <button class="primary" id="btnCopy">Copy to clipboard</button>
+      <button id="btnEmail">Open an email</button>
+      <button id="btnDlMd">Download .md</button>
+      <button id="btnDlJson">Download .json</button>
+      <button id="btnSend" hidden>Send</button>
+      <span class="grow"></span>
+      <span class="status" id="sheetStatus"></span>
+    </div>
+  </div>
+</div>
+
+<div id="printview"></div>
+
+<script>
+const CONFIG = {"title":"Where the Time Goes","consultantFirst":"Brad","consultantName":"Brad Coulter","consultantEmail":"brad@clearpathlabs.dev","minutes":"about 12 minutes","submitUrl":"","storageKey":"wtg-field-service-trades-hvac-t1","exampleWho":"Ray, owner of a two-truck heating and cooling company","persona":{"name":"Ray","role":"owner of a two-truck heating and cooling company","situation":"Runs it from his phone; QuickBooks at the kitchen table at night; one tech, Luis, on the second truck."},"mode":"stepper","sittings":null,"masthead":{"eyebrow":"{company} · about 12 minutes","greeting":"Hi {name} — {consultantFirst} here.","lede":"Fourteen questions about where your week goes, in your own words. Nothing technical. Talk into your phone if that’s easier — tap the microphone on your keyboard. Your answers save as you go, so stop whenever; the link brings you back.","howto":["One question at a time. Tap Next when you’re done with each.","Tell me what actually happened — “last Tuesday” beats “usually.”","Don’t worry about fixes. That’s my job. Just tell me what eats the day."],"rules":[],"after":"When you’re done, I read it within two business days and send you one page: what I heard, and the two or three things we could build first.","callOption":"I’d rather do this on a call with {consultantFirst}"},"finishText":"That’s all fourteen. Nothing has been sent yet — the button below turns your answers into a plain text note you can send to {consultantFirst}, or just tap Print. Either way, you’ll hear back within two business days.","exampleOpenByDefault":true,"note":"","meta":{"pack":"field-service-trades","packName":"Field-service trades","packVersion":"1.0.0","trade":"hvac","tradeLabel":"HVAC","tier":1,"tierName":"Owner-operator","persona":"Ray","spineVersion":"1.0.0","builtAt":"2026-09-08"}};
+const SCHEMA = [{"id":"p1","num":"Part 1","title":"You and your work","minutes":2,"intro":"A quick picture of your job so the rest of your answers have context.","questions":[{"id":"t1.who","type":"group","label":"Who am I talking to?","help":"Your name and the name of the business.","fields":[{"k":"name","label":"Your name","type":"text","grow":true},{"k":"company","label":"The business","type":"text","grow":true}]},{"id":"t1.crew","type":"textarea","cls":"short","label":"Who works with you, and who does what?","help":"Rough is fine. “Me and one tech. My wife does the books on Sundays.”","example":"Me and Luis. Luis runs the second truck. My wife does QuickBooks on Sunday nights and hates it."},{"id":"t1.tools","type":"checkboxes","other":true,"label":"What do you run the business on?","help":"Tap everything. Paper and your head count.","options":["My phone","Paper tickets or a notebook","Texts with customers","QuickBooks","Square or another invoicing app","Housecall Pro, Jobber, or similar","Google Calendar","A whiteboard","My head"]}]},{"id":"p2","num":"Part 2","title":"The pain inventory","minutes":5,"intro":"This is the most important part. List up to ten things from your last two working weeks that were slow, repetitive, error-prone, or just annoying. One per row. For each one, describe one specific occasion — what actually happened, not what usually happens.","questions":[{"id":"t1.yesterday","type":"textarea","label":"Walk me through yesterday. First call of the morning to the last thing you did before you quit.","help":"Just what happened. Don’t tidy it up.","placeholder":"Yesterday I…","example":"6:40, texted Luis the no-cool on Elm from my truck. 8:15 the customer called asking where he was — I’d told her 8 and forgot to tell Luis. Quoted a condenser at lunch off my phone, then typed it again into QuickBooks that night. Supply house at 3 for a capacitor I thought was on the truck. Home at 7, invoices till 9."},{"id":"t1.twice","type":"textarea","label":"What did you type twice this week?","help":"Same information, two places. A text and an invoice. A notepad and QuickBooks. The board and the customer’s file.","placeholder":"This week I typed…","example":"Every estimate — once in the text to the customer, once in QuickBooks. Every part I buy at the counter — the receipt, then the invoice. And the tune-up customers: they’re in a notebook in the truck, and the ones who pay get typed into the computer."},{"id":"t1.head","type":"textarea","label":"What’s in your head, your truck, or your phone that isn’t written down anywhere?","help":"The things that would be gone if you were out for two weeks.","placeholder":"Nobody else knows…","example":"Which customers still have the old R-22 units. Who’s got a gate code. Which houses Luis shouldn’t go back to. What the guy on Maple was quoted last spring."},{"id":"t1.chase","type":"textarea","label":"What did you chase this week?","help":"Money, parts, callbacks, permits, an answer from somebody.","placeholder":"I was chasing…","example":"A deposit on the Hendricks install for two weeks. The township on the permit for last week’s furnace — I never got around to calling. Luis’s hours for Friday."},{"id":"t1.sorry","type":"textarea","label":"What went wrong last month that you had to apologize for?","help":"To a customer, a supplier, or your own crew.","placeholder":"Last month…","example":"Told a lady 8 a.m., Luis showed at 11 because I never told him. Missed a tune-up I promised in the fall because it was in the notebook, not the calendar."}],"rule":{"eyebrow":"The rule for this part","text":"No solutions. Your rows may not contain the words app, software, system, automate, dashboard, or AI. If you start writing “we need something that…”, stop and write down what happened instead."},"aside":"The richest ground is rarely the main event of your job. It’s the preparing, the checking, and the chasing around it.","tips":{"eyebrow":"If you get stuck","items":["What did you re-key from a tech’s ticket into the invoice or QuickBooks this week?","What did you chase — a deposit, a part, a permit, a signature, a timecard?","Which agreement or membership renewal slipped, and how did you find out?","What callback or warranty return didn’t get attributed to anyone, or got billed by mistake?","What did a tech buy at the counter that you only learned about from the receipt?","What did you apologize to a customer for — an arrival window, a part that didn’t come in, a double-booked morning?","What lives on the whiteboard, in a notebook, or in a group text because the software doesn’t hold it?","What do you type into tomorrow’s board every evening that already exists somewhere else?"]}},{"id":"p4","num":"Part 4","title":"Pick one, and dig","minutes":2,"intro":"Look back at your inventory. Pick the one that costs you the most, that affects other people, and where the information already exists somewhere — an email, a form, a sheet. That’s the one worth building for first.","questions":[{"id":"t1.pick","type":"textarea","cls":"short","label":"Of everything you just told me, which one bugs you the most?","help":"One thing. The one you’d pay to make go away.","placeholder":"The one that bugs me most is…","example":"The tune-ups. I’ve got maybe 60 people who paid for a fall check and I have no list I trust."},{"id":"t1.time","type":"text","label":"How much of your week does that one eat?","help":"A guess is fine. Hours, or “every night after dinner.”","placeholder":"About…","example":"An hour a night in October, and I still miss people."}]},{"id":"p7","num":"Part 7","title":"What “better” looks like","minutes":3,"intro":"Now the outcome. Fill in the blanks in your own words — these two sentences become the first lines of the build.","questions":[{"id":"t1.free","type":"textarea","cls":"short","label":"If that one went away, what would you do with the time?","help":"Be specific. “Quote the two jobs I never get to.” “Eat dinner with the kids.”","placeholder":"I’d…","example":"Quote the two jobs I never get to. Get home before the kids are in bed."},{"id":"t1.mode","type":"radio","label":"Would you rather something does it and you check, or sets it up and you decide?","help":"Either answer is fine. It changes what gets built.","options":[["Does it, I check","Like a helper who finishes the paperwork and shows you"],["Sets it up, I decide","Like a helper who lays it out and waits for your OK"],["Not sure","We’ll figure it out on the call"]]},{"id":"t1.notdo","type":"textarea","cls":"short","label":"Anything you don’t want changed?","help":"The part of the job you like, or the thing you don’t trust anybody else with.","placeholder":"Leave alone…","example":"Don’t touch how I quote — I look at the house before I give a number. And don’t text my customers without me seeing it."}]},{"id":"pf","num":"Last part","title":"About this worksheet","minutes":1,"intro":"You’re one of the first people to fill this out. Help me make it better for the next one — be blunt.","questions":[{"id":"t1.feedback","type":"group","label":"Last one. How was this?","help":"Honest answer. It only gets better if you tell me.","fields":[{"k":"minutes","label":"About how many minutes did it take?","type":"number","unit":"minutes"},{"k":"note","label":"Anything dumb, confusing, or missing?","type":"text","grow":true}]}]}];
+
+/* =========================================================================
+   Engine — you should not need to edit below this line
+   ========================================================================= */
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const _P = new URLSearchParams(location.search);
+  const PERSON = { name:(_P.get("name")||"").trim(), company:(_P.get("co")||_P.get("company")||"").trim(), interview:_P.get("interview") === "1" };
+  CONFIG.person = PERSON;
+  if(PERSON.interview) CONFIG.mode = "scroll";
+  const app = $("#app");
+  let state = {}, meta = {};
+  let saveTimer = null;
+
+  // ---------- storage ----------
+  function load(){
+    try{
+      const raw = localStorage.getItem(CONFIG.storageKey);
+      if(raw){ const o = JSON.parse(raw); state = o.state || {}; meta = o.meta || {}; }
+    }catch(e){ state = {}; meta = {}; }
+  }
+  function save(){
+    const pill = $("#saved");
+    pill.textContent = "Saving…"; pill.className = "pill busy";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      meta.updatedAt = Date.now();
+      try{
+        localStorage.setItem(CONFIG.storageKey, JSON.stringify({state, meta}));
+        pill.textContent = "Saved"; pill.className = "pill ok";
+      }catch(e){
+        pill.textContent = "Not saved (storage off)"; pill.className = "pill dim";
+      }
+      updateProgress();
+    }, 350);
+  }
+  function setVal(id, v){
+    if(!meta.startedAt) meta.startedAt = Date.now();
+    state[id] = v; save();
+  }
+  function get(id){ return state[id]; }
+
+  // ---------- helpers ----------
+  function el(tag, attrs, ...kids){
+    const n = document.createElement(tag);
+    if(attrs) for(const [k,v] of Object.entries(attrs)){
+      if(v === undefined || v === null || v === false) continue;
+      if(k === "class") n.className = v;
+      else if(k === "html") n.innerHTML = v;
+      else if(k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for(const kid of kids){ if(kid == null) continue; n.append(kid.nodeType ? kid : document.createTextNode(String(kid))); }
+    return n;
+  }
+  const fmt = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const isEmpty = v => v == null || (typeof v === "string" && !v.trim()) || (Array.isArray(v) && v.length === 0) ||
+    (typeof v === "object" && !Array.isArray(v) && Object.values(v).every(isEmpty));
+  function personalize(s){ return s.replace(/\{first\}/g, CONFIG.consultantFirst).replace(/\{name\}/g, CONFIG.consultantName).replace(/\{email\}/g, CONFIG.consultantEmail); }
+
+  // ---------- renderers ----------
+  function exampleBlock(q){
+    if(!q.example && !q.exampleRows) return null;
+    const body = el("div", {class:"ex-body"});
+    if(q.exampleRows){
+      q.exampleRows.forEach(r => {
+        const d = el("div", {class:"exrow"});
+        d.append(el("b", null, (r.n ? r.n + ". " : "")));
+        q.columns.forEach((c, i) => {
+          if(r[c.k] == null) return;
+          if(i > 0) d.append(el("span", {class:"m"}, " · "));
+          d.append(el("span", {class:"m"}, c.label.replace(/\s*\(.*\)$/, "") + ": "));
+          d.append(r[c.k]);
+        });
+        body.append(d);
+      });
+    } else if(Array.isArray(q.example)){
+      q.example.forEach(line => body.append(el("p", null, line)));
+    } else {
+      body.append(el("p", null, q.example));
+    }
+    return el("details", {class:"ex", open:CONFIG.exampleOpenByDefault ? true : null}, el("summary", null, "Example — " + CONFIG.exampleWho.split(",")[0]), body);
+  }
+
+  function labelFor(q, forId){
+    const l = el("label", {class:"q-label", for:forId});
+    l.append(q.label);
+    if(q.optional) l.append(el("span", {class:"opt"}, "optional"));
+    return l;
+  }
+
+  function autoGrow(ta){
+    const grow = () => { ta.style.height = "auto"; ta.style.height = (ta.scrollHeight + 2) + "px"; };
+    ta.addEventListener("input", grow);
+    requestAnimationFrame(grow);
+  }
+
+  function rText(q){
+    const inp = el("input", {type:q.type === "email" ? "email" : "text", id:q.id, placeholder:q.placeholder || "", value:get(q.id) || ""});
+    inp.addEventListener("input", () => setVal(q.id, inp.value));
+    return inp;
+  }
+  function rTextarea(q){
+    const ta = el("textarea", {id:q.id, class:q.cls || "", placeholder:q.placeholder || ""});
+    ta.value = get(q.id) || "";
+    ta.addEventListener("input", () => setVal(q.id, ta.value));
+    autoGrow(ta);
+    return ta;
+  }
+  function rNumber(q){
+    const wrap = el("div", {class:"inline", style:"display:flex;align-items:center;flex-wrap:wrap;gap:6px"});
+    const inp = el("input", {type:"number", id:q.id, min:"0", inputmode:"numeric", value:get(q.id) ?? ""});
+    inp.addEventListener("input", () => setVal(q.id, inp.value));
+    wrap.append(inp);
+    if(q.unit) wrap.append(el("span", {class:"unit"}, q.unit));
+    if(q.timerHint){
+      const hint = el("span", {class:"unit", id:"timerHint"});
+      wrap.append(hint);
+    }
+    return wrap;
+  }
+  function rRadio(q){
+    const box = el("div", {class:"choices" + (q.inline ? " inline" : ""), role:"radiogroup", "aria-labelledby":q.id + "-label"});
+    const cur = get(q.id);
+    q.options.forEach((o, i) => {
+      const [text, sub] = Array.isArray(o) ? o : [o, null];
+      const inp = el("input", {type:"radio", name:q.id, value:text, id:q.id + "-" + i});
+      if(cur === text) inp.checked = true;
+      const lab = el("label", {class:"choice" + (cur === text ? " checked" : ""), for:q.id + "-" + i}, inp, el("span", null, text, sub ? el("span", {class:"sub"}, sub) : null));
+      inp.addEventListener("change", () => {
+        setVal(q.id, text);
+        box.querySelectorAll(".choice").forEach(c => c.classList.remove("checked"));
+        lab.classList.add("checked");
+      });
+      box.append(lab);
+    });
+    return box;
+  }
+  function rCheckboxes(q){
+    const box = el("div", {class:"choices"});
+    let cur = get(q.id) || {sel:[], other:""};
+    if(Array.isArray(cur)) cur = {sel:cur, other:""};
+    const opts = q.none ? [...q.options, q.none] : q.options;
+    const labs = [];
+    opts.forEach((text, i) => {
+      const inp = el("input", {type:"checkbox", id:q.id + "-" + i, value:text});
+      if(cur.sel.includes(text)) inp.checked = true;
+      const lab = el("label", {class:"choice" + (inp.checked ? " checked" : ""), for:q.id + "-" + i}, inp, el("span", null, text));
+      labs.push([inp, lab, text]);
+      inp.addEventListener("change", () => {
+        if(q.none && text === q.none && inp.checked){
+          labs.forEach(([i2, l2, t2]) => { if(t2 !== q.none){ i2.checked = false; l2.classList.remove("checked"); } });
+        } else if(q.none && inp.checked){
+          labs.forEach(([i2, l2, t2]) => { if(t2 === q.none){ i2.checked = false; l2.classList.remove("checked"); } });
+        }
+        lab.classList.toggle("checked", inp.checked);
+        cur.sel = labs.filter(([i2]) => i2.checked).map(([, , t2]) => t2);
+        setVal(q.id, {sel:cur.sel, other:cur.other});
+      });
+      box.append(lab);
+    });
+    if(q.other){
+      const oi = el("input", {type:"text", id:q.id + "-other", placeholder:"Anything else?", value:cur.other || ""});
+      oi.addEventListener("input", () => { cur.other = oi.value; setVal(q.id, {sel:cur.sel, other:cur.other}); });
+      box.append(el("div", {class:"other-wrap"}, el("label", {for:q.id + "-other"}, "Other:"), oi));
+    }
+    return box;
+  }
+  function rScale(q){
+    const box = el("div");
+    const row = el("div", {class:"scale", role:"radiogroup"});
+    const cur = get(q.id);
+    for(let i = 1; i <= 5; i++){
+      const inp = el("input", {type:"radio", name:q.id, value:String(i), id:q.id + "-" + i});
+      if(String(cur) === String(i)) inp.checked = true;
+      const lab = el("label", {class:"choice" + (inp.checked ? " checked" : ""), for:q.id + "-" + i, style:"position:relative"}, inp, el("span", null, String(i)));
+      inp.addEventListener("change", () => { setVal(q.id, String(i)); row.querySelectorAll(".choice").forEach(c => c.classList.remove("checked")); lab.classList.add("checked"); });
+      row.append(lab);
+    }
+    box.append(row, el("div", {class:"scale-ends"}, el("span", null, "1 — " + (q.low || "")), el("span", null, "5 — " + (q.high || ""))));
+    return box;
+  }
+  function rYesNo(q){
+    const box = el("div", {class:"yn"});
+    const cur = get(q.id) || {};
+    q.items.forEach(it => {
+      const row = el("div", {class:"yn-row"}, el("span", {class:"t"}, it.t));
+      ["yes","no"].forEach(v => {
+        const inp = el("input", {type:"radio", name:q.id + "-" + it.k, value:v});
+        if(cur[it.k] === v) inp.checked = true;
+        inp.addEventListener("change", () => { cur[it.k] = v; setVal(q.id, {...cur}); });
+        row.append(el("label", null, inp, v));
+      });
+      box.append(row);
+    });
+    return box;
+  }
+  function rFill(q){
+    const box = el("div", {class:"fill"});
+    const cur = get(q.id) || {};
+    q.parts.forEach(p => {
+      if(typeof p === "string"){ box.append(p); return; }
+      const inp = el("input", {type:"text", placeholder:p.ph || "", "aria-label":p.ph || p.k, value:cur[p.k] || "", style:p.w ? "min-width:" + p.w : ""});
+      inp.addEventListener("input", () => { cur[p.k] = inp.value; setVal(q.id, {...cur}); });
+      box.append(inp);
+    });
+    return box;
+  }
+  function rGroup(q){
+    const box = el("div", {class:"row-fields", style:q.stacked ? "flex-direction:column;gap:10px" : ""});
+    const cur = get(q.id) || {};
+    q.fields.forEach(f => {
+      const fid = q.id + "-" + f.k;
+      const wrap = el("div", {class:"f", style:(f.grow ? "flex:1;min-width:220px;" : "") + (f.width ? "min-width:0;width:" + f.width + ";" : "")});
+      wrap.append(el("label", {for:fid}, f.label));
+      const inp = el("input", {type:f.type === "number" ? "number" : "text", id:fid, min:f.type === "number" ? "0" : null, placeholder:f.placeholder || "", value:cur[f.k] ?? ""});
+      inp.addEventListener("input", () => { cur[f.k] = inp.value; setVal(q.id, {...cur}); });
+      if(f.unit) wrap.append(el("div", {class:"inline"}, inp, el("span", {class:"unit"}, f.unit)));
+      else wrap.append(inp);
+      box.append(wrap);
+    });
+    return box;
+  }
+  function rTable(q){
+    const cols = q.columns;
+    const gridCols = (q.numbered ? "38px " : "") + cols.map(c => c.w || "1fr").join(" ");
+    const box = el("div", {class:"tbl"});
+    const head = el("div", {class:"tbl-head", style:"grid-template-columns:" + gridCols});
+    if(q.numbered) head.append(el("div", null, "#"));
+    cols.forEach(c => head.append(el("div", null, c.label)));
+    box.append(head);
+    const body = el("div");
+    box.append(body);
+    let rows = get(q.id) || [];
+    if(!Array.isArray(rows)) rows = [];
+    const count = Math.max(q.rows, rows.length);
+    while(rows.length < count) rows.push({});
+    function commit(){ setVal(q.id, rows.map(r => ({...r}))); }
+    function addRow(idx){
+      const r = el("div", {class:"tbl-row", style:"grid-template-columns:" + gridCols});
+      if(q.numbered) r.append(el("div", {class:"n", "data-label":""}, String(idx + 1)));
+      cols.forEach(c => {
+        const cell = el("div", {"data-label":c.label});
+        let inp;
+        if(c.type === "textarea"){ inp = el("textarea", {placeholder:c.placeholder || "", "aria-label":c.label + ", row " + (idx + 1), rows:"2"}); inp.value = rows[idx][c.k] || ""; autoGrow(inp); }
+        else { inp = el("input", {type:"text", placeholder:c.placeholder || "", "aria-label":c.label + ", row " + (idx + 1), value:rows[idx][c.k] || ""}); }
+        inp.addEventListener("input", () => { rows[idx][c.k] = inp.value; commit(); });
+        cell.append(inp);
+        r.append(cell);
+      });
+      body.append(r);
+    }
+    rows.forEach((_, i) => addRow(i));
+    const foot = el("div", {class:"tbl-foot"});
+    const addBtn = el("button", {type:"button", class:"link", style:"padding:2px 0"}, "+ Add a row");
+    addBtn.addEventListener("click", () => {
+      if(rows.length >= q.max) return;
+      rows.push({}); addRow(rows.length - 1); commit();
+      if(rows.length >= q.max) addBtn.disabled = true;
+    });
+    foot.append(el("span", null, "Empty rows are fine — they’re left out when you send."), addBtn);
+    box.append(foot);
+    return box;
+  }
+
+  function renderQuestion(q){
+    const wrap = el("div", {class:"q", id:"q-" + q.id});
+    if(q.type === "note"){ wrap.append(el("p", {class:"aside"}, q.text)); return wrap; }
+    const labelId = q.id + "-label";
+    const l = labelFor(q, ["text","email","textarea","number"].includes(q.type) ? q.id : null);
+    l.id = labelId;
+    if(!["text","email","textarea","number"].includes(q.type)){ const s = el("span", {class:"q-label", id:labelId}); s.append(...l.childNodes); wrap.append(s); }
+    else wrap.append(l);
+    if(q.help) wrap.append(el("p", {class:"q-help"}, q.help));
+    let ctl;
+    switch(q.type){
+      case "text": case "email": ctl = rText(q); break;
+      case "textarea": ctl = rTextarea(q); break;
+      case "number": ctl = rNumber(q); break;
+      case "radio": ctl = rRadio(q); break;
+      case "checkboxes": ctl = rCheckboxes(q); break;
+      case "scale": ctl = rScale(q); break;
+      case "yesno": ctl = rYesNo(q); break;
+      case "fill": ctl = rFill(q); break;
+      case "group": ctl = rGroup(q); break;
+      case "table": ctl = rTable(q); break;
+      default: ctl = el("div", null, "Unknown question type: " + q.type);
+    }
+    wrap.append(ctl);
+    if(q.note) wrap.append(el("p", {class:"q-help", style:"margin-top:10px;font-style:italic"}, q.note));
+    const ex = exampleBlock(q);
+    if(ex) wrap.append(ex);
+    return wrap;
+  }
+
+  function renderAll(){
+    const jump = $("#jump");
+    SCHEMA.forEach(sec => {
+      const s = el("section", {class:"part", id:sec.id, "aria-labelledby":sec.id + "-h"});
+      s.append(el("div", {class:"part-head"}, el("span", {class:"part-num"}, sec.num), el("h2", {id:sec.id + "-h"}, sec.title), el("span", {class:"part-min"}, "about " + sec.minutes + " min")));
+      if(sec.intro) s.append(el("p", {class:"intro"}, sec.intro));
+      if(sec.rule) s.append(el("div", {class:"callout rule"}, el("span", {class:"eyebrow"}, sec.rule.eyebrow), el("p", null, sec.rule.text)));
+      if(sec.tips){ const ul = el("ul"); sec.tips.items.forEach(t => ul.append(el("li", null, t))); s.append(el("div", {class:"callout tips"}, el("span", {class:"eyebrow"}, sec.tips.eyebrow), ul)); }
+      if(sec.aside) s.append(el("p", {class:"aside"}, sec.aside));
+      sec.questions.forEach(q => s.append(renderQuestion(q)));
+      app.append(s);
+      jump.append(el("option", {value:sec.id}, sec.num + " · " + sec.title));
+    });
+    jump.append(el("option", {value:"finish"}, "Review & send"));
+    jump.addEventListener("change", () => { if(jump.value){ document.getElementById(jump.value).scrollIntoView({block:"start"}); jump.value = ""; } });
+  }
+
+  // ---------- progress & timer ----------
+  function answered(q){
+    const v = get(q.id);
+    if(q.type === "table") return Array.isArray(v) && v.some(r => r && !isEmpty(r[q.columns[0].k]));
+    if(q.type === "checkboxes") return v && ((v.sel && v.sel.length) || (v.other && v.other.trim()));
+    return !isEmpty(v);
+  }
+  function updateProgress(){
+    let total = 0, done = 0;
+    SCHEMA.forEach(s => s.questions.forEach(q => { if(q.type === "note" || q.optional) return; total++; if(answered(q)) done++; }));
+    $("#fill").style.width = Math.round(100 * done / total) + "%";
+    $("#progText").innerHTML = "<span class='long'>" + done + " of " + total + " answered</span><span class='short'>" + done + "/" + total + "</span>";
+    if(CONFIG.sittings){ CONFIG.sittings.forEach((s, k) => { let t = 0, d = 0; SCHEMA.filter(p => s.parts.includes(p.id)).forEach(p => p.questions.forEach(q => { if(q.type === "note" || q.optional) return; t++; if(answered(q)) d++; })); const e = document.querySelectorAll(".sitcard .sitprog")[k]; if(e) e.textContent = d + " of " + t + " answered"; }); }
+  }
+  function elapsedMin(){ return meta.startedAt ? Math.max(0, Math.round((Date.now() - meta.startedAt) / 60000)) : 0; }
+  function tick(){
+    const m = elapsedMin();
+    $("#elapsed").textContent = meta.startedAt ? (m < 180 ? m + " min" : "3+ hrs") : "0 min";
+    const h = $("#timerHint"); if(h) h.textContent = meta.startedAt ? "(the page timer says about " + m + " since you started)" : "";
+  }
+
+  // ---------- export ----------
+  function valueText(q){
+    const v = get(q.id);
+    switch(q.type){
+      case "table": {
+        const rows = (Array.isArray(v) ? v : []).filter(r => r && Object.values(r).some(x => x && String(x).trim()));
+        if(!rows.length) return "";
+        return rows.map((r, i) => (i + 1) + ". " + q.columns.map(c => (r[c.k] && String(r[c.k]).trim()) ? c.label.replace(/\s*\(.*\)$/, "") + ": " + String(r[c.k]).trim() : null).filter(Boolean).join(" · ")).join("\n");
+      }
+      case "checkboxes": {
+        if(!v) return "";
+        const parts = [...(v.sel || [])]; if(v.other && v.other.trim()) parts.push("Other: " + v.other.trim());
+        return parts.map(p => "- " + p).join("\n");
+      }
+      case "yesno": return v ? q.items.map(it => v[it.k] ? it.t + " " + v[it.k].toUpperCase() : null).filter(Boolean).join("\n") : "";
+      case "fill": { const o = v || {}; return q.parts.map(p => typeof p === "string" ? p : "[" + ((o[p.k] || "").trim() || "___") + "]").join(""); }
+      case "group": { const o = v || {}; return q.fields.map(f => (o[f.k] !== undefined && String(o[f.k]).trim()) ? f.label + ": " + String(o[f.k]).trim() + (f.unit ? " " + f.unit : "") : null).filter(Boolean).join(q.stacked ? "\n" : " · "); }
+      case "scale": return v ? v + " / 5" : "";
+      case "number": return (v !== undefined && v !== "") ? v + (q.unit ? " " + q.unit : "") : "";
+      default: return v ? String(v).trim() : "";
+    }
+  }
+  function blocks(){
+    const out = [];
+    const name = get("p1.name") || (get("t1.who") || {}).name || PERSON.name || "";
+    out.push({t:"h1", x:CONFIG.title + " — answers" + (name ? " from " + name : "")});
+    out.push({t:"meta", x:"Exported " + new Date().toLocaleString() + (meta.startedAt ? " · about " + elapsedMin() + " minutes since first answer" : "")});
+    if(CONFIG.meta) out.push({t:"meta", x:"Worksheet: " + CONFIG.meta.packName + " (" + CONFIG.meta.tradeLabel + ") · " + CONFIG.meta.tierName + (PERSON.company ? " · " + PERSON.company : "") + (PERSON.interview ? " · interview mode" : "")});
+    SCHEMA.forEach(s => {
+      out.push({t:"h2", x:s.num + " — " + s.title});
+      s.questions.forEach(q => { if(q.type === "note") return; out.push({t:"q", x:q.label, a:valueText(q)}); });
+    });
+    return out;
+  }
+  function toMarkdown(){
+    return blocks().map(b => {
+      if(b.t === "h1") return "# " + b.x + "\n";
+      if(b.t === "meta") return "_" + b.x + "_\n";
+      if(b.t === "h2") return "\n## " + b.x + "\n";
+      return "**" + b.x + "**\n" + (b.a ? b.a : "(no answer)") + "\n";
+    }).join("\n");
+  }
+  function toJSON(){
+    const answers = {}, labels = {};
+    SCHEMA.forEach(s => s.questions.forEach(q => { if(q.type === "note") return; answers[q.id] = get(q.id) ?? null; labels[q.id] = q.label; }));
+    return JSON.stringify({title:CONFIG.title, version:"1.1.0", worksheet:CONFIG.meta || null, person:PERSON, exportedAt:new Date().toISOString(), startedAt:meta.startedAt ? new Date(meta.startedAt).toISOString() : null, elapsedMinutes:elapsedMin(), answers, labels}, null, 2);
+  }
+  function toPrintHTML(){
+    return blocks().map(b => {
+      if(b.t === "h1") return "<h1>" + fmt(b.x) + "</h1>";
+      if(b.t === "meta") return "<p style='color:#666'>" + fmt(b.x) + "</p>";
+      if(b.t === "h2") return "<h2>" + fmt(b.x) + "</h2>";
+      return "<div class='pq'>" + fmt(b.x) + "</div><div class='pa" + (b.a ? "" : " empty") + "'>" + (b.a ? fmt(b.a) : "(no answer)") + "</div>";
+    }).join("");
+  }
+  function download(name, text, type){
+    const blob = new Blob([text], {type});
+    const url = URL.createObjectURL(blob);
+    const a = el("a", {href:url, download:name});
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  function fileStem(){ const n = (get("p1.name") || (get("t1.who") || {}).name || PERSON.name || "answers").trim().replace(/[^\w]+/g, "-").replace(/^-|-$/g, ""); return "where-the-time-goes-" + (n || "answers"); }
+
+  // ---------- wiring ----------
+  function wire(){
+    const M = CONFIG.masthead || {};
+    const subP = s => String(s || "").replace(/\{consultantFirst\}/g, CONFIG.consultantFirst).replace(/\{consultantName\}/g, CONFIG.consultantName).replace(/\{consultantEmail\}/g, CONFIG.consultantEmail).replace(/\{name\}/g, PERSON.name || "there").replace(/\{company\}/g, PERSON.company || CONFIG.title);
+    $("#mastEyebrow").textContent = subP(M.eyebrow || ("Discovery worksheet · " + CONFIG.minutes));
+    if(PERSON.name){ const h = $("#hi"); h.textContent = subP(M.greeting || "Hi {name} — {consultantFirst} here."); h.hidden = false; }
+    $("#lede").textContent = subP(M.lede || "");
+    const hl = $("#howtoList"); (M.howto || []).forEach(x => { const li = document.createElement("li"); li.innerHTML = subP(x); hl.append(li); });
+    const rl = $("#rulesList"); (M.rules || []).forEach(x => { const li = document.createElement("li"); li.innerHTML = subP(x); rl.append(li); });
+    if(!(M.rules || []).length){ $("#rulesCard").hidden = true; $("#howto").classList.add("one"); }
+    if(M.after){ $("#afterText").textContent = subP(M.after); $("#afterBox").hidden = false; }
+    if(PERSON.interview){ const b = $("#interviewBanner"); b.textContent = "Interview mode — " + CONFIG.consultantFirst + " is filling this in with " + (PERSON.name || "you") + " on the call."; b.hidden = false; }
+    else if(M.callOption){ const b = $("#callBtn"); b.textContent = subP(M.callOption); b.hidden = false; b.addEventListener("click", () => { location.href = "mailto:" + encodeURIComponent(CONFIG.consultantEmail) + "?subject=" + encodeURIComponent("Let’s do the worksheet on a call") + "&body=" + encodeURIComponent("Hi " + CONFIG.consultantFirst + ",\n\nI’d rather do this on a call. Good times for me:\n\n"); }); }
+    $("#finishText").textContent = subP(CONFIG.finishText || "");
+
+    const overlay = $("#overlay"), ta = $("#exportText"), st = $("#sheetStatus");
+    const flash = (msg, ok=true) => { st.textContent = msg; st.className = "status " + (ok ? "ok" : "bad"); setTimeout(() => { st.textContent = ""; }, 4000); };
+
+    $("#btnReview").addEventListener("click", () => {
+      ta.value = toMarkdown();
+      $("#sheetSub").textContent = personalize("Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
+      overlay.hidden = false; ta.focus(); ta.setSelectionRange(0, 0);
+    });
+    $("#btnClose").addEventListener("click", () => overlay.hidden = true);
+    overlay.addEventListener("click", e => { if(e.target === overlay) overlay.hidden = true; });
+    document.addEventListener("keydown", e => { if(e.key === "Escape") overlay.hidden = true; });
+
+    $("#btnCopy").addEventListener("click", async () => {
+      try{ await navigator.clipboard.writeText(ta.value); flash("Copied. Paste it into an email."); }
+      catch(e){ ta.focus(); ta.select(); flash("Select-all and copy from the box above (Ctrl/Cmd+C).", false); }
+    });
+    $("#btnEmail").addEventListener("click", () => {
+      const subj = CONFIG.title + " — answers from " + (get("p1.name") || "me");
+      const body = "Hi " + CONFIG.consultantFirst + ",\n\nMy worksheet answers are pasted below.\n\n";
+      window.location.href = "mailto:" + encodeURIComponent(CONFIG.consultantEmail) + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(body);
+      flash("Your email app should open. Paste your copied answers into it.");
+    });
+    $("#btnDlMd").addEventListener("click", () => { download(fileStem() + ".md", ta.value, "text/markdown"); flash("Downloading .md"); });
+    $("#btnDlJson").addEventListener("click", () => { download(fileStem() + ".json", toJSON(), "application/json"); flash("Downloading .json"); });
+
+    if(CONFIG.submitUrl){
+      const b = $("#btnSend"); b.hidden = false; b.textContent = "Send to " + CONFIG.consultantFirst; b.classList.add("primary");
+      b.addEventListener("click", async () => {
+        b.disabled = true; st.textContent = "Sending…"; st.className = "status";
+        try{
+          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body:toJSON()});
+          if(!r.ok) throw new Error("HTTP " + r.status);
+          st.textContent = "Sent. Thank you!"; st.className = "status ok";
+        }catch(e){ st.textContent = "Couldn’t send (" + e.message + "). Use Copy or Download instead."; st.className = "status bad"; b.disabled = false; }
+      });
+    }
+
+    $("#btnPrint").addEventListener("click", () => window.print());
+    window.addEventListener("beforeprint", () => { $("#printview").innerHTML = toPrintHTML(); });
+
+    let armed = false, armTimer = null;
+    const clearBtn = $("#btnClear"), fs = $("#finishStatus");
+    clearBtn.addEventListener("click", () => {
+      if(!armed){ armed = true; clearBtn.textContent = "Really clear everything? Click again to confirm"; clearBtn.classList.add("danger"); clearBtn.classList.remove("link");
+        armTimer = setTimeout(() => { armed = false; clearBtn.textContent = "Clear all answers"; clearBtn.classList.remove("danger"); clearBtn.classList.add("link"); }, 6000); return; }
+      clearTimeout(armTimer);
+      try{ localStorage.removeItem(CONFIG.storageKey); }catch(e){}
+      location.reload();
+    });
+  }
+
+  function setupMode(){
+    if(CONFIG.mode === "stepper"){
+      document.body.classList.add("stepper");
+      const steps = [...app.querySelectorAll(".q")], N = steps.length; let i = 0;
+      const nav = el("div", {class:"stepnav"});
+      const back = el("button", {type:"button", class:"btn2"}, "Back"), cnt = el("span", {class:"stepcount"}), next = el("button", {type:"button", class:"btn2 pri"}, "Next");
+      nav.append(back, cnt, next); app.append(nav);
+      const finish = $("#finish");
+      function show(k, scroll){
+        i = Math.max(0, Math.min(N, k));
+        steps.forEach((s, j) => s.classList.toggle("on", j === i));
+        const done = i >= N; finish.hidden = !done; next.hidden = done; back.disabled = i === 0;
+        if(done) cnt.textContent = "That’s all " + N + ". Go back to change anything.";
+        if(!done){ cnt.textContent = (i + 1) + " of " + N; next.textContent = i === N - 1 ? "Finish" : "Next"; if(scroll){ steps[i].scrollIntoView({block:"start"}); const f = steps[i].querySelector("textarea, input[type=text], input[type=email], input[type=number]"); if(f && window.innerWidth > 700) f.focus({preventScroll:true}); } }
+        else if(scroll) finish.scrollIntoView({block:"start"});
+        try{ localStorage.setItem(CONFIG.storageKey + ":step", String(i)); }catch(e){}
+      }
+      back.addEventListener("click", () => show(i - 1, true));
+      next.addEventListener("click", () => show(i + 1, true));
+      let start = 0; try{ start = Number(localStorage.getItem(CONFIG.storageKey + ":step") || 0); }catch(e){}
+      if(!Number.isFinite(start)) start = 0;
+      show(Math.min(start, N), false);
+      if(start > 0) document.body.classList.add("started");
+      const sb = $("#startBtn"); sb.hidden = false; sb.textContent = "Start";
+      sb.addEventListener("click", () => { document.body.classList.add("started"); if(i >= N) finish.scrollIntoView({block:"start"}); else show(i, true); });
+      $("#jump").hidden = true;
+    }
+    const sit = CONFIG.sittings;
+    if(sit && sit.length && CONFIG.mode !== "stepper"){
+      const nav = $("#sitnav"); nav.hidden = false;
+      sit.forEach((s, k) => {
+        const first = document.getElementById(s.parts[0]);
+        if(first && k > 0){ const d = el("div", {class:"sitting-divider"}, el("span", {class:"eyebrow"}, s.title + " · " + s.minutes), el("p", null, s.note || "")); first.parentNode.insertBefore(d, first); }
+        const card = el("button", {type:"button", class:"sitcard"}, el("b", null, s.title), el("small", null, s.minutes), el("span", {class:"sitprog"}, ""));
+        card.addEventListener("click", () => { if(first) first.scrollIntoView({block:"start"}); });
+        nav.append(card);
+      });
+    }
+  }
+
+  load();
+  if(!state["t1.who"] && (PERSON.name || PERSON.company)) state["t1.who"] = {name:PERSON.name, company:PERSON.company};
+  renderAll();
+  wire();
+  setupMode();
+  updateProgress();
+  tick(); setInterval(tick, 30000);
+  const pill = $("#saved");
+  if(Object.keys(state).length){ pill.textContent = "Saved"; pill.className = "pill ok"; }
+})();
+</script>
+</body>
+</html>

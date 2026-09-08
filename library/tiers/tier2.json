@@ -1,0 +1,28 @@
+{
+  "id": 2,
+  "key": "t2",
+  "name": "The office",
+  "mode": "scroll",
+  "minutesLabel": "20–30 minutes",
+  "parts": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "pf"],
+  "sittings": null,
+  "masthead": {
+    "eyebrow": "Discovery worksheet · 20–30 minutes",
+    "greeting": "Hi {name} — {consultantFirst} here.",
+    "lede": "You know your work better than anyone. This worksheet helps you lay out what’s slow, repetitive, or error-prone, so that {consultantFirst} can build something that actually helps instead of guessing. There are no wrong answers, and you don’t need to know anything about software.",
+    "howto": [
+      "<b>Answer in your own words.</b> Specific beats polished. “Last Tuesday” beats “usually.”",
+      "<b>Describe problems, not solutions.</b> Figuring out the fix is the builder’s job. You only have to describe what actually happens.",
+      "<b>Nothing is graded.</b> A half-answer is more useful than a blank. Questions marked <i>optional</i> can be skipped if you’re short on time.",
+      "<b>Your answers save in this browser as you type.</b> Close the tab, come back later, pick up where you left off. (They stay on this device only.)"
+    ],
+    "rules": [
+      "<b>One occasion, not a pattern.</b> Wherever you can, tell me about a specific time it happened, with a day and a number.",
+      "<b>In Parts 2–4, don’t use the words</b> <i>app, software, system, automate, dashboard,</i> or <i>AI.</i> If you catch yourself writing “we need something that…”, stop and write down what happened instead.",
+      "<b>Real beats tidy.</b> The messy workaround you’re slightly embarrassed by is usually the most valuable thing on this page."
+    ],
+    "after": "When you’re done, {consultantFirst} reads it within two business days and sends you one page: what he heard, and the two or three things worth building first."
+  },
+  "finishText": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Empty questions are marked so you can see what you skipped.",
+  "exampleOpenByDefault": false
+}

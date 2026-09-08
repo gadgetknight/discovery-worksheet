@@ -1,0 +1,31 @@
+{
+  "id": 3,
+  "key": "t3",
+  "name": "The organization",
+  "mode": "scroll",
+  "minutesLabel": "45–60 minutes, in two sittings",
+  "parts": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "pf"],
+  "sittings": [
+    { "title": "Sitting 1", "minutes": "about 30 minutes", "parts": ["p1", "p2", "p3", "p4", "p5"], "note": "The pain, in your words. Stop at the end of Part 5 if you need to — the link brings you back." },
+    { "title": "Sitting 2", "minutes": "about 30 minutes", "parts": ["p6", "p7", "p8", "p9", "p10", "pf"], "note": "Systems, people, constraints, and numbers. This is the half that most intake forms skip." }
+  ],
+  "masthead": {
+    "eyebrow": "Discovery worksheet · 45–60 minutes, two sittings",
+    "greeting": "Hi {name} — {consultantFirst} here.",
+    "lede": "This is the longer version, because at your size the answer is rarely just the pain — it’s the systems around it, who owns them, and what the {org} requires before anything new runs. Two sittings of about thirty minutes. Do the first one and stop; the link brings you back.",
+    "howto": [
+      "<b>Sitting 1 is the pain, in your words.</b> The same questions I ask an owner-operator, because corporate teams tend to describe the solution they’ve already decided on. I need the problem underneath it.",
+      "<b>Sitting 2 is the organization.</b> Systems and exports, the people who decide and the people who’ll push back, constraints, metrics with a baseline, and what you can send me.",
+      "<b>Nothing is graded.</b> A half-answer beats a blank. Questions marked <i>optional</i> can be skipped.",
+      "<b>Answers save in this browser as you type.</b> They stay on this device; if you switch machines, finish on the one you started on."
+    ],
+    "rules": [
+      "<b>One occasion, not a pattern.</b> A specific day and a number, wherever you can.",
+      "<b>In Parts 2–4, don’t use the words</b> <i>app, software, system, automate, dashboard,</i> or <i>AI.</i> Write down what happened instead.",
+      "<b>Don’t paste anything you’d need an NDA for.</b> If your {org} requires one before sitting 2, say so in Part 10 and one comes back the same day."
+    ],
+    "after": "When you submit, {consultantFirst} reads everything within two business days and sends you one page: what he heard, and the two or three things worth building first, with what each would take."
+  },
+  "finishText": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Attachments go by email to the same address.",
+  "exampleOpenByDefault": false
+}

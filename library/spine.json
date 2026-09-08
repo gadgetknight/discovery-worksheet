@@ -1,0 +1,269 @@
+{
+  "version": "1.0.0",
+  "notes": "The spine is the question structure every composed worksheet shares. Tokens in braces ({customer}, {jobs}, {worker}, {org}, {system}) are replaced from the pack's vocabulary. listKey pulls checkbox options from pack.lists. Each question lists the tiers it appears in; questions with ids starting t1. are the spoken-register set for owner-operators. Packs may override any field of any question via pack.overrides[questionId].",
+  "parts": [
+    {
+      "id": "p1", "num": "Part 1", "title": "You and your work", "minutes": { "1": 2, "2": 3, "3": 4 },
+      "intro": "A quick picture of your job so the rest of your answers have context.",
+      "questions": [
+        { "id": "t1.who", "tiers": [1], "type": "group", "label": "Who am I talking to?", "help": "Your name and the name of the business.", "fields": [
+          { "k": "name", "label": "Your name", "type": "text", "grow": true },
+          { "k": "company", "label": "The business", "type": "text", "grow": true }
+        ] },
+        { "id": "t1.crew", "tiers": [1], "type": "textarea", "cls": "short", "label": "Who works with you, and who does what?", "help": "Rough is fine. “Me and one {worker}. My wife does the books on Sundays.”" },
+        { "id": "t1.tools", "tiers": [1], "type": "checkboxes", "listKey": "systems_t1", "other": true, "label": "What do you run the business on?", "help": "Tap everything. Paper and your head count." },
+
+        { "id": "p1.name", "tiers": [2, 3], "type": "text", "label": "Your name", "placeholder": "First and last" },
+        { "id": "p1.role", "tiers": [2, 3], "type": "text", "label": "Your role or title", "placeholder": "e.g., Office manager, Dispatcher, Director of Operations" },
+        { "id": "p1.org", "tiers": [2, 3], "type": "text", "label": "{Org} name", "placeholder": "Where you work" },
+        { "id": "p1.email", "tiers": [2, 3], "type": "email", "label": "Best email for follow-up questions", "placeholder": "you@example.com" },
+        { "id": "p1.areas", "tiers": [2, 3], "type": "checkboxes", "listKey": "areas", "other": true, "label": "Which areas are you responsible for?", "help": "Check everything that lands on your desk, even partly." },
+        { "id": "p1.people", "tiers": [2, 3], "type": "text", "label": "How many people do you work with or supervise day to day?", "help": "A rough number is fine. Say who: “6 {workers}, 1 installer, me and the owner in the office.”", "placeholder": "e.g., 8 in the field, 2 in the office" },
+        { "id": "p1.systems", "tiers": [2, 3], "type": "checkboxes", "listKey": "systems", "other": true, "label": "What systems and tools do you touch in a normal week?", "help": "Tap everything you use, then add anything missing. The whiteboard and the group text count." },
+        { "id": "p1.hours", "tiers": [2, 3], "type": "textarea", "label": "Where do your hours actually go in a typical week?", "help": "Rough buckets with hours. Don’t be precise — be honest. Include the things that don’t feel like “real work.”", "placeholder": "e.g., Phones ~12 hrs · The board ~10 hrs · Invoicing ~6 hrs · Chasing parts and people ~5 hrs …" },
+        { "id": "p1.season", "tiers": [2, 3], "type": "textarea", "cls": "short", "optional": true, "label": "When is your busy season, and what changes when it hits?", "help": "What gets dropped, what gets worse, who gets added." }
+      ]
+    },
+    {
+      "id": "p2", "num": "Part 2", "title": "The pain inventory", "minutes": { "1": 5, "2": 8, "3": 8 },
+      "intro": "This is the most important part. List up to ten things from your last two working weeks that were slow, repetitive, error-prone, or just annoying. One per row. For each one, describe one specific occasion — what actually happened, not what usually happens.",
+      "rule": { "eyebrow": "The rule for this part", "text": "No solutions. Your rows may not contain the words app, software, system, automate, dashboard, or AI. If you start writing “we need something that…”, stop and write down what happened instead." },
+      "tipsKey": "pain",
+      "aside": "The richest ground is rarely the main event of your job. It’s the preparing, the checking, and the chasing around it.",
+      "questions": [
+        { "id": "t1.yesterday", "tiers": [1], "type": "textarea", "label": "Walk me through yesterday. First call of the morning to the last thing you did before you quit.", "help": "Just what happened. Don’t tidy it up.", "placeholder": "Yesterday I…" },
+        { "id": "t1.twice", "tiers": [1], "type": "textarea", "label": "What did you type twice this week?", "help": "Same information, two places. A text and an invoice. A notepad and QuickBooks. The board and the {customer}’s file.", "placeholder": "This week I typed…" },
+        { "id": "t1.head", "tiers": [1], "type": "textarea", "label": "What’s in your head, your truck, or your phone that isn’t written down anywhere?", "help": "The things that would be gone if you were out for two weeks.", "placeholder": "Nobody else knows…" },
+        { "id": "t1.chase", "tiers": [1], "type": "textarea", "label": "What did you chase this week?", "help": "Money, parts, callbacks, permits, an answer from somebody.", "placeholder": "I was chasing…" },
+        { "id": "t1.sorry", "tiers": [1], "type": "textarea", "label": "What went wrong last month that you had to apologize for?", "help": "To a {customer}, a supplier, or your own crew.", "placeholder": "Last month…" },
+
+        { "id": "p2.pain", "tiers": [2, 3], "type": "table", "label": "Ten things that cost you time in the last two weeks", "help": "You don’t have to fill all ten. Five good rows beat ten vague ones.",
+          "numbered": true, "rows": 10, "max": 14,
+          "columns": [
+            { "k": "what", "label": "What happened, concretely (one occasion)", "type": "textarea", "w": "3fr", "placeholder": "Last Thursday I…" },
+            { "k": "freq", "label": "How often", "w": "1fr", "placeholder": "weekly, every {job}…" },
+            { "k": "time", "label": "Time lost each time (hands-on, not waiting)", "w": "1.1fr", "placeholder": "45 min, 2 hrs…" },
+            { "k": "who", "label": "Who else is affected", "w": "1.2fr", "placeholder": "the {workers}, the owner…" }
+          ] }
+      ]
+    },
+    {
+      "id": "p3", "num": "Part 3", "title": "Your spreadsheets and workarounds", "minutes": { "2": 4, "3": 5 },
+      "intro": "Most of the real system lives in personal spreadsheets, notebooks, and habits. That isn’t a failure — it’s where the requirements are hiding. Tell me about yours.",
+      "questions": [
+        { "id": "p3.sheets", "tiers": [2, 3], "type": "table", "label": "The spreadsheets, lists, and documents you maintain by hand", "help": "The ones you built yourself, or inherited, because nothing else held the information.",
+          "numbered": true, "rows": 4, "max": 10,
+          "columns": [
+            { "k": "name", "label": "What you call it", "w": "1.1fr", "placeholder": "Agreements.xlsx" },
+            { "k": "tracks", "label": "What it tracks", "type": "textarea", "w": "1.6fr", "placeholder": "Every {customer} on a maintenance plan, renewal month…" },
+            { "k": "source", "label": "Where the information comes from", "type": "textarea", "w": "1.3fr", "placeholder": "{system} + my memory" },
+            { "k": "users", "label": "Who else uses it", "w": "1fr", "placeholder": "The owner, the {workers}" },
+            { "k": "freq", "label": "How often you update it", "w": "0.9fr", "placeholder": "Daily; more in season" },
+            { "k": "breaks", "label": "What goes wrong with it", "type": "textarea", "w": "1.4fr", "placeholder": "Out of date the minute I…" }
+          ] },
+        { "id": "p3.truth", "tiers": [2, 3], "type": "textarea", "label": "Where does the “real” information live — the place everyone would agree is the truth? And where does it actually get looked up?", "help": "These are often two different places. Say both." },
+        { "id": "p3.copy", "tiers": [2, 3], "type": "textarea", "label": "What do you copy, re-type, or re-format from one place to another every week?", "help": "Be literal: from which document, into which document, how many items." },
+        { "id": "p3.check", "tiers": [2, 3], "type": "textarea", "label": "What do you have to check or double-check before you can move on — and what happens when you skip it?", "help": "The checks you do because you’ve been burned before." },
+        { "id": "p3.chase", "tiers": [2, 3], "type": "textarea", "label": "What do you wait on or chase?", "help": "Deposits, parts, permits, a signature, a {worker}’s paperwork, an answer from the owner…" },
+        { "id": "p3.sick", "tiers": [2, 3], "type": "textarea", "cls": "short", "optional": true, "label": "What would break if you were out for two weeks?", "help": "The things only you know how to do are the things most worth writing down." }
+      ]
+    },
+    {
+      "id": "p4", "num": "Part 4", "title": "Pick one, and dig", "minutes": { "1": 2, "2": 4, "3": 5 },
+      "intro": "Look back at your inventory. Pick the one that costs you the most, that affects other people, and where the information already exists somewhere — an email, a form, a sheet. That’s the one worth building for first.",
+      "questions": [
+        { "id": "t1.pick", "tiers": [1], "type": "textarea", "cls": "short", "label": "Of everything you just told me, which one bugs you the most?", "help": "One thing. The one you’d pay to make go away.", "placeholder": "The one that bugs me most is…" },
+        { "id": "t1.time", "tiers": [1], "type": "text", "label": "How much of your week does that one eat?", "help": "A guess is fine. Hours, or “every night after dinner.”", "placeholder": "About…" },
+
+        { "id": "p4.pick", "tiers": [2, 3], "type": "group", "label": "My #1 problem", "fields": [
+          { "k": "row", "label": "Row number from Part 2", "type": "number", "width": "110px" },
+          { "k": "sentence", "label": "In one plain sentence", "type": "text", "grow": true }
+        ] },
+        { "id": "p4.backup", "tiers": [2, 3], "type": "group", "label": "My backup, if the first one turns out to be harder than it looks", "fields": [
+          { "k": "row", "label": "Row number", "type": "number", "width": "110px" },
+          { "k": "sentence", "label": "In one plain sentence", "type": "text", "grow": true }
+        ] },
+        { "id": "p4.why", "tiers": [2, 3], "type": "textarea", "label": "Why this one?", "help": "It costs you every week, it costs someone else, the information already exists as text somewhere…" },
+        { "id": "p4.whys", "tiers": [2, 3], "type": "group", "stacked": true, "label": "Why does it happen? Keep asking “because.”", "help": "Go as deep as you can; three is fine. Two endings that mean you’re not done: “because the software is bad” (too vague — what specifically?) and “because that’s how the {org} is set up” (true, but nobody can build for it — back up one step).",
+          "fields": [
+            { "k": "b1", "label": "1. Because", "type": "text" },
+            { "k": "b2", "label": "2. Because", "type": "text" },
+            { "k": "b3", "label": "3. Because", "type": "text" },
+            { "k": "b4", "label": "4. Because", "type": "text" },
+            { "k": "b5", "label": "5. Because", "type": "text" }
+          ] },
+        { "id": "p4.root", "tiers": [2, 3], "type": "text", "label": "The root cause I’d want fixed", "help": "One sentence. Pick the rung that someone could actually build for." },
+        { "id": "p4.where", "tiers": [2, 3], "type": "radio", "label": "Where in the job does the pain actually sit?", "help": "Pick the one that fits best.",
+          "options": [
+            ["Figuring out what’s needed", "“What does this {customer} actually want?”"],
+            ["Finding the information", "“Which email had the model number?”"],
+            ["Getting inputs ready", "“Cleaning up the {worker}’s notes before I can invoice”"],
+            ["Checking before you proceed", "“Making sure the parts and labor are coded right”"],
+            ["Doing the main task", "“Building the board for tomorrow”"],
+            ["Fixing when something changes", "“The {customer} called and the part didn’t come in”"],
+            ["Watching that it worked", "“Did the permit get filed? Did the renewal go out?”"],
+            ["Closing out", "“Posting the invoice, closing the {job}, updating the sheet”"]
+          ],
+          "note": "If you picked “doing the main task,” look again. The main task usually goes fine — the pain is in getting ready, checking, and chasing around it. If it really is the main task, keep it." }
+      ]
+    },
+    {
+      "id": "p5", "num": "Part 5", "title": "Walk me through it", "minutes": { "2": 5, "3": 6 },
+      "intro": "For your #1 problem, tell me the story of one real time you did it, start to finish. Words are fine. Be literal about file names, who sent what, and where things end up.",
+      "questions": [
+        { "id": "p5.trigger", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "The trigger — what happens in the real world right before you start?" },
+        { "id": "p5.input", "tiers": [2, 3], "type": "textarea", "label": "The input — the actual file, screen, email, form, or conversation", "help": "Name it. Describe its format. Say how many items are in it, and how much it varies from one time to the next." },
+        { "id": "p5.steps", "tiers": [2, 3], "type": "textarea", "cls": "tall", "label": "What you do with it, step by step", "help": "Number the steps. Include the parts that feel too obvious to mention — those are usually the parts that matter most.", "placeholder": "1. \n2. \n3. " },
+        { "id": "p5.output", "tiers": [2, 3], "type": "textarea", "label": "The output — what you produce, and where it lands", "help": "Which screen, which sheet, which printout, which email — and who receives it. Not “on my screen.”" },
+        { "id": "p5.gate", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "Who checks or approves it, and who notices if it’s wrong?" },
+        { "id": "p5.errors", "tiers": [2, 3], "type": "textarea", "label": "What does a wrong answer look like? What does a missed item look like? Which is worse?" },
+        { "id": "p5.numbers", "tiers": [2, 3], "type": "group", "label": "The numbers", "help": "Best guesses are fine.", "fields": [
+          { "k": "byhand", "label": "How long it takes by hand today", "type": "number", "unit": "minutes" },
+          { "k": "check", "label": "How long to check one finished result", "type": "number", "unit": "minutes" },
+          { "k": "permonth", "label": "How many times a month", "type": "number", "unit": "times" }
+        ] },
+        { "id": "p5.examples", "tiers": [2, 3], "type": "radio", "inline": true, "label": "Could you share 10–20 real examples of the input, and what the finished result should look like — with {customer} names and personal details removed?", "help": "This matters more than anything else on this page. Real examples are how a builder learns what “right” looks like. Nothing gets built from invented data.",
+          "options": ["Yes, I can pull those together", "Probably — I’d need to check with someone first", "No, or not sure how"] },
+        { "id": "p5.examples_who", "tiers": [2, 3], "type": "text", "optional": true, "label": "If someone needs to okay that, who?", "placeholder": "Name and role" }
+      ]
+    },
+    {
+      "id": "p6", "num": "Part 6", "title": "Fit and guardrails", "minutes": { "2": 4, "3": 5 },
+      "intro": "A few checks that save wasted weeks. Be honest — a “yes” here isn’t a bad thing. It changes what gets built, not whether.",
+      "questions": [
+        { "id": "p6.disq", "tiers": [2, 3], "type": "checkboxes", "none": "None of these", "label": "Are any of these true for your #1 problem?", "help": "Check any that apply. Any check means the fix should draft and let a person decide, rather than act on its own.",
+          "options": [
+            "The whole value is that it’s done exactly the same way every time (payroll, a price book, a permit form)",
+            "One mistake costs more than a hundred correct answers save (a wrong price to a {customer}, a wrong part on a truck, a missed safety step)",
+            "Someone must be able to see exactly why a result came out the way it did (an inspector, an auditor, the owner)",
+            "The people who do this task have said they don’t want it changed",
+            "It’s already fast and cheap, and a good-enough rule exists",
+            "The information never changes and there isn’t much of it"
+          ] },
+        { "id": "p6.qual", "tiers": [2, 3], "type": "checkboxes", "label": "Which of these describe the task?", "help": "Check all that fit.",
+          "options": [
+            "Reading or writing everyday language ({worker} notes, emails, forms, requests)",
+            "Sorting many varied items into your categories (every call, every request, every complaint)",
+            "Picking out the few that need attention from the many that don’t",
+            "Personalizing the same message for different {customers}",
+            "Matching two lists and flagging what differs (the receipt vs. the PO, the invoice vs. the {job})",
+            "Producing the same report or sheet from the same kind of file every week",
+            "Answering questions from a fixed set of documents (your price book, your policies, the manufacturer’s specs)",
+            "Predicting something that hasn’t happened yet (which estimates will close, which weeks will be short-staffed)"
+          ] },
+        { "id": "p6.nosoftware", "tiers": [2, 3], "type": "textarea", "label": "The no-new-software answer: what’s the best fix that needs nothing built at all?", "help": "A rule, a checklist, a template, a filter, a process change, asking someone. There almost always is one." },
+        { "id": "p6.notenough", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "Why isn’t that enough?", "help": "If you can’t answer this, the no-software fix is probably the right first step — and that’s a fine outcome." },
+        { "id": "p6.mode", "tiers": [2, 3], "type": "radio", "inline": true, "label": "Should the tool do it, or help you do it?",
+          "options": ["Do it, and I spot-check", "Draft or suggest, and I decide every time", "Not sure"],
+          "note": "Rule of thumb: automate what’s tedious and agreed-on. Assist with what people enjoy, what carries relationships, or where people disagree about what “correct” means." },
+        { "id": "p6.agree", "tiers": [2, 3], "type": "yesno", "label": "Three quick ones", "items": [
+          { "k": "agree", "t": "Do people agree on the correct way to do this task?" },
+          { "k": "stakes", "t": "Are the stakes high for any single case?" },
+          { "k": "enjoy", "t": "Do people enjoy doing this task?" }
+        ] },
+        { "id": "p6.data", "tiers": [2, 3], "type": "checkboxes", "listKey": "sensitive", "none": "None of these", "label": "Does the information involved include any of these?", "help": "This decides how examples get shared and what a first version is allowed to touch." },
+        { "id": "p6.approver", "tiers": [2, 3], "type": "text", "label": "Who at your {org} needs to know or approve before anything runs on real information?", "placeholder": "Name and role — or “nobody, it’s my call”" },
+        { "id": "p6.systems", "tiers": [2, 3], "type": "textarea", "label": "Which systems would it need to touch — and could it be read-only?", "help": "The safest first version reads from your systems and never writes into them. Is that workable here? What would it need to read?" }
+      ]
+    },
+    {
+      "id": "p7", "num": "Part 7", "title": "What “better” looks like", "minutes": { "1": 3, "2": 3, "3": 4 },
+      "intro": "Now the outcome. Fill in the blanks in your own words — these two sentences become the first lines of the build.",
+      "questions": [
+        { "id": "t1.free", "tiers": [1], "type": "textarea", "cls": "short", "label": "If that one went away, what would you do with the time?", "help": "Be specific. “Quote the two jobs I never get to.” “Eat dinner with the kids.”", "placeholder": "I’d…" },
+        { "id": "t1.mode", "tiers": [1], "type": "radio", "label": "Would you rather something does it and you check, or sets it up and you decide?", "help": "Either answer is fine. It changes what gets built.",
+          "options": [["Does it, I check", "Like a helper who finishes the paperwork and shows you"], ["Sets it up, I decide", "Like a helper who lays it out and waits for your OK"], ["Not sure", "We’ll figure it out on the call"]] },
+        { "id": "t1.notdo", "tiers": [1], "type": "textarea", "cls": "short", "label": "Anything you don’t want changed?", "help": "The part of the job you like, or the thing you don’t trust anybody else with.", "placeholder": "Leave alone…" },
+
+        { "id": "p7.today", "tiers": [2, 3], "type": "fill", "label": "The problem, in one sentence",
+          "parts": ["Today, ", { "k": "who", "ph": "who" }, " has to ", { "k": "what", "ph": "do what", "w": "260px" }, " by hand, which takes ", { "k": "time", "ph": "how long" }, " per ", { "k": "freq", "ph": "how often" }, ", and it goes wrong when ", { "k": "wrong", "ph": "what happens", "w": "260px" }, "."] },
+        { "id": "p7.goal", "tiers": [2, 3], "type": "fill", "label": "The goal, in one sentence",
+          "parts": ["I’d want something that turns ", { "k": "input", "ph": "this input", "w": "220px" }, " into ", { "k": "output", "ph": "this output", "w": "220px" }, ", so that ", { "k": "who", "ph": "who" }, " can ", { "k": "do", "ph": "do what", "w": "220px" }, " in under ", { "k": "time", "ph": "how long" }, "."] },
+        { "id": "p7.success", "tiers": [2, 3], "type": "textarea", "label": "How would you know it worked? Give me a number.", "help": "“Invoices out the same day instead of three days later.” “Zero missed renewals this season.” “The board built by 4:30 instead of 6.”" },
+        { "id": "p7.notdo", "tiers": [2, 3], "type": "textarea", "label": "What should this NOT do?", "help": "At least two things. Drawing the line is as useful as describing the goal.", "placeholder": "It should not… \nIt should not…" },
+        { "id": "p7.time", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "If it worked, what would you do with the time?" },
+        { "id": "p7.stop", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "What would make you stop using it after a month?" },
+        { "id": "p7.users", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "Who else, by name or role, would use this or depend on it?" },
+        { "id": "p7.boring", "tiers": [2, 3], "type": "checkboxes", "label": "Which of these are true today?", "help": "Each unchecked box is where a tool breaks first — and something to fix before or while building.",
+          "options": [
+            "One named person would own this after it’s built, and it’s clear who",
+            "The information it needs lives in one place (not three spreadsheets and a group text)",
+            "The information arrives in a consistent format",
+            "There’s a written standard for what a “good” result looks like",
+            "Someone would look at a “not sure — needs a human” list every time it runs"
+          ] },
+        { "id": "p7.else", "tiers": [2, 3], "type": "textarea", "optional": true, "label": "Anything else I should know?", "help": "Busy seasons, staff turnover, the devices you use (a phone in the truck? a laptop in the office?), IT rules, budget, things that have been tried before and why they didn’t stick." }
+      ]
+    },
+    {
+      "id": "p8", "num": "Part 8", "title": "Systems and data", "minutes": { "3": 8 }, "tiers": [3],
+      "intro": "Every system that touches your #1 problem. Be literal about who owns it and whether a first version could get away with only reading from it.",
+      "questions": [
+        { "id": "p8.inventory", "tiers": [3], "type": "table", "label": "The systems inventory", "help": "One row per system, including the spreadsheets. “Owner” is the person who’d have to say yes to anything touching it.",
+          "rows": 5, "max": 14,
+          "columns": [
+            { "k": "system", "label": "System", "w": "1fr", "placeholder": "QuickBooks" },
+            { "k": "holds", "label": "What it holds", "type": "textarea", "w": "1.6fr", "placeholder": "{Jobs}, dispatch, invoices, {worker} notes" },
+            { "k": "owner", "label": "Who owns it", "w": "1fr", "placeholder": "Name, role" },
+            { "k": "rw", "label": "Read only, or write?", "w": "1fr", "placeholder": "Read only" },
+            { "k": "out", "label": "How data gets out", "type": "textarea", "w": "1.3fr", "placeholder": "Nightly CSV export; API needs IT approval" }
+          ] },
+        { "id": "p8.dup", "tiers": [3], "type": "textarea", "label": "Where does the same number exist in more than one place — and which copy do people believe?", "help": "This is usually where the pain lives at your size." },
+        { "id": "p8.exports", "tiers": [3], "type": "textarea", "cls": "short", "label": "What exports can you actually pull today, and who can pull them?", "help": "CSV from a report, an accounting export, a scheduled email of a PDF — and whether it takes a request to someone else." }
+      ]
+    },
+    {
+      "id": "p9", "num": "Part 9", "title": "People and constraints", "minutes": { "3": 6 }, "tiers": [3],
+      "intro": "Who decides, who’s affected, who’ll push back — and what the {org} requires before anything new runs.",
+      "questions": [
+        { "id": "p9.stakeholders", "tiers": [3], "type": "table", "label": "The people around this problem", "help": "Include the person who’ll quietly ignore it. They matter most.",
+          "rows": 4, "max": 12,
+          "columns": [
+            { "k": "who", "label": "Name and role", "w": "1.1fr", "placeholder": "Karen, controller" },
+            { "k": "decides", "label": "Decides?", "w": "0.7fr", "placeholder": "yes / no" },
+            { "k": "affected", "label": "Affected?", "w": "0.7fr", "placeholder": "daily / weekly / no" },
+            { "k": "pushback", "label": "Will push back?", "w": "0.8fr", "placeholder": "likely / maybe / no" },
+            { "k": "why", "label": "Why", "type": "textarea", "w": "1.6fr", "placeholder": "She was burned by the last rollout" }
+          ] },
+        { "id": "p9.constraints", "tiers": [3], "type": "checkboxes", "listKey": "constraints", "none": "None of these", "label": "Which of these apply before anything new can run?", "help": "Check all that apply. None of them stops the work; they change the order." },
+        { "id": "p9.owner", "tiers": [3], "type": "text", "label": "Who owns this after it’s built?", "help": "One name. If the answer is “whoever has time,” it will break within a month.", "placeholder": "Name and role" },
+        { "id": "p9.change", "tiers": [3], "type": "textarea", "label": "The last time a new tool was rolled out here — what happened?", "help": "Who adopted it, who didn’t, and why. This is the most predictive answer on the page." }
+      ]
+    },
+    {
+      "id": "p10", "num": "Part 10", "title": "Success, and what to send", "minutes": { "3": 6 }, "tiers": [3],
+      "intro": "Numbers with a baseline, and the files that would save us both a week.",
+      "questions": [
+        { "id": "p10.metrics", "tiers": [3], "type": "table", "label": "Success metrics, with today’s number", "help": "If nobody measures it today, say so — that’s useful too.",
+          "rows": 3, "max": 8,
+          "columns": [
+            { "k": "metric", "label": "Metric", "w": "1.3fr", "placeholder": "Days from {job} complete to invoice sent" },
+            { "k": "today", "label": "Today", "w": "0.8fr", "placeholder": "3.5 days" },
+            { "k": "target", "label": "Target", "w": "0.8fr", "placeholder": "Same day" },
+            { "k": "who", "label": "Who measures it", "w": "1fr", "placeholder": "Karen, monthly" }
+          ] },
+        { "id": "p10.attachments", "tiers": [3], "type": "checkboxes", "listKey": "attachments", "other": true, "label": "Which of these could you send, with {customer} names and personal details removed?", "help": "Last month’s exports are ideal — old enough to be safe, recent enough to be real. Email them to the address in the note that came with this link." },
+        { "id": "p10.nda", "tiers": [3], "type": "radio", "inline": true, "label": "Does your {org} need an NDA before we go further?", "options": ["No", "Yes — send one", "Not sure, I’ll ask"] }
+      ]
+    },
+    {
+      "id": "pf", "num": "Last part", "title": "About this worksheet", "minutes": { "1": 1, "2": 2, "3": 2 },
+      "intro": "You’re one of the first people to fill this out. Help me make it better for the next one — be blunt.",
+      "questions": [
+        { "id": "t1.feedback", "tiers": [1], "type": "group", "label": "Last one. How was this?", "help": "Honest answer. It only gets better if you tell me.", "fields": [
+          { "k": "minutes", "label": "About how many minutes did it take?", "type": "number", "unit": "minutes" },
+          { "k": "note", "label": "Anything dumb, confusing, or missing?", "type": "text", "grow": true }
+        ] },
+
+        { "id": "pf.minutes", "tiers": [2, 3], "type": "number", "label": "How long did this actually take you?", "unit": "minutes", "timerHint": true },
+        { "id": "pf.length", "tiers": [2, 3], "type": "radio", "inline": true, "label": "Was the length…", "options": ["Too long", "About right", "Could be longer"] },
+        { "id": "pf.confusing", "tiers": [2, 3], "type": "textarea", "label": "Which questions were confusing, hard to answer, or felt like the same question twice?", "help": "Name them by part and wording if you can." },
+        { "id": "pf.pointless", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "Which questions felt pointless for your work?" },
+        { "id": "pf.missing", "tiers": [2, 3], "type": "textarea", "label": "What didn’t I ask that I should have?" },
+        { "id": "pf.examples", "tiers": [2, 3], "type": "textarea", "cls": "short", "label": "Did the examples help, get in the way, or feel off for your world?" },
+        { "id": "pf.rating", "tiers": [2, 3], "type": "scale", "label": "Rate this worksheet overall", "low": "Waste of time", "high": "Worth every minute" },
+        { "id": "pf.else", "tiers": [2, 3], "type": "textarea", "cls": "short", "optional": true, "label": "Anything else?" }
+      ]
+    }
+  ]
+}
