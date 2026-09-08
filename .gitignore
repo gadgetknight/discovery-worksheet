@@ -2,3 +2,4 @@ answers/
 _to_delete/
 .env
 .vercel/
+public/

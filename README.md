@@ -61,9 +61,11 @@ page falls back to Georgia and the system sans.
 
 ## Deploying
 
-Root `index.html` plus the `out/` folder go to the Vercel project. From a Claude
-session the Vercel MCP `deploy_to_vercel` is how it has gone up so far; from a logged-in
-CLI: `cd C:\Projects\discovery-worksheet; vercel --prod`.
+`vercel.json` makes Vercel run `node compose/build.mjs` and serve only `public/`
+(`index.html` plus `out/`). The library source stays off the site. Push to master, then
+deploy — from a logged-in CLI: `cd C:\Projects\discovery-worksheet; vercel --prod`;
+from a Claude session, see `CLAUDE.md` (a one-file deploy that pulls master). Linking the
+GitHub repo in the Vercel dashboard would make every push deploy on its own.
 
 ## Changelog
 
