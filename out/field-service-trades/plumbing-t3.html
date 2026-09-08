@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
   Discovery worksheet engine — template
-  Version 1.1.1 — 2026-09-08
+  Version 1.1.2 — 2026-09-08
   This file is the renderer. compose/build.mjs injects a composed CONFIG and
   SCHEMA (spine + tier profile + vertical pack) at the two placeholders below
   and writes a finished worksheet to out/. Do not hand-edit generated files;
   edit the library or this template and rebuild.
 
   CHANGELOG
+  1.1.2  2026-09-08  The tier name no longer appears in the customer's text export
+                     (it stays in the JSON meta for Brad). Rule: the customer
+                     never sees a tier.
   1.1.1  2026-09-08  Fix: literal newline in the call-option mailto body broke
                      the whole script (Tier 1 never started). Stepper now hides
                      the questions until Start and collapses the masthead once
@@ -731,7 +734,7 @@ const SCHEMA = [{"id":"p1","num":"Part 1","title":"You and your work","minutes":
     const name = get("p1.name") || (get("t1.who") || {}).name || PERSON.name || "";
     out.push({t:"h1", x:CONFIG.title + " — answers" + (name ? " from " + name : "")});
     out.push({t:"meta", x:"Exported " + new Date().toLocaleString() + (meta.startedAt ? " · about " + elapsedMin() + " minutes since first answer" : "")});
-    if(CONFIG.meta) out.push({t:"meta", x:"Worksheet: " + CONFIG.meta.packName + " (" + CONFIG.meta.tradeLabel + ") · " + CONFIG.meta.tierName + (PERSON.company ? " · " + PERSON.company : "") + (PERSON.interview ? " · interview mode" : "")});
+    if(CONFIG.meta) out.push({t:"meta", x:"Worksheet: " + CONFIG.meta.packName + " (" + CONFIG.meta.tradeLabel + ")" + (PERSON.company ? " · " + PERSON.company : "") + (PERSON.interview ? " · interview mode" : "")});
     SCHEMA.forEach(s => {
       out.push({t:"h2", x:s.num + " — " + s.title});
       s.questions.forEach(q => { if(q.type === "note") return; out.push({t:"q", x:q.label, a:valueText(q)}); });

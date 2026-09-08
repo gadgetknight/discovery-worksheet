@@ -1,9 +1,10 @@
 # CLAUDE.md — discovery-worksheet
 
-**Version:** 1.3.0 — 2026-09-08
+**Version:** 1.3.1 — 2026-09-08
 
 ### Changelog
-- **1.3.0 (2026-09-08)** — Phase 1 of the platform plan: the library and composer exist. `library/` (spine, three tier profiles, first vertical pack, research notes, consultant.json), `compose/` (compose.mjs, build.mjs, template.html), `out/` (six generated worksheets + index). Rules rewritten for a folder with a build step. `index.html` stays the generic 1.0.1 worksheet.
+- **1.3.1 (2026-09-08)** — Added "When answers come back" (answers → readback → project seed). Template 1.1.2: tier name removed from the customer's text export.
+- **1.3.0 (2026-09-08)** — Phase 1 of the platform plan: the library and composer exist. `vercel.json` builds on Vercel and serves `public/` only; deploy method documented under Rules. `library/` (spine, three tier profiles, first vertical pack, research notes, consultant.json), `compose/` (compose.mjs, build.mjs, template.html), `out/` (six generated worksheets + index). Rules rewritten for a folder with a build step. `index.html` stays the generic 1.0.1 worksheet.
 - **1.2.0 (2026-09-08)** — Brad decided: inside CRM_platform; five packs first (field-service trades, accounting practices, small law firms, venues, nonprofits & churches); Resend as sender (already verified on clearpathlabs.dev per the ClearPath site's CHANGELOG 0.8.0); customer never sees a tier; interview mode yes. Plan is 1.1.0.
 - **1.1.0 (2026-09-08)** — The project is growing into the Discovery intake platform. Added `DISCOVERY_PLATFORM_PLAN.md` (the proposal: composed worksheets = spine + tier profile + vertical pack; three tiers by business structure; built inside CRM_platform; three packs first) and `prototype/discovery-prototype.html` (14 clickable screens). Both published as artifacts. Five decisions pending Brad — see the plan.
 - **1.0.0 (2026-09-08)** — File created with the 1.0.0 worksheet.
@@ -64,6 +65,25 @@ Runtime: `?name=First&co=Company` personalizes the masthead and prefills the nam
 question; `?interview=1` forces scroll mode and shows the interview banner (Brad
 filling it in on a call). Answers autosave to localStorage under a key per pack/trade/tier.
 
+## When answers come back
+
+1. The customer's export (the .md from **Review & send**, or the .json) arrives by email.
+   Save it as `answers/<date>-<name>-<trade>-t<tier>-answers.md`. `answers/` is gitignored
+   and stays that way — never commit it.
+2. Within two business days — the worksheet promises this on the masthead — write the
+   **readback**: one page, in Brad's voice, to the customer. *What I heard* (their pain,
+   in their words, grouped), *what I'd build first* (two or three things, each with what
+   it takes), *what I need from you* (the questions that decide price and approach).
+   Say plainly which pains aren't software. Save it beside the answers as
+   `…-readback.md`. First one: `answers/2026-09-08-ted-testerson-hvac-t1-readback.md`
+   (a test Brad filled in himself).
+3. The answers and the readback are the first two files of that customer's project
+   folder; the project's CLAUDE.md is written from them. Real answers also correct the
+   pack — when a customer contradicts a persona example or the research file, fix the
+   library, dated.
+4. Phase 2 (in CRM_platform) automates 1 and drafts 2: answers land on the lead, Brad is
+   notified, the readback is drafted for him to edit.
+
 ## Rules for this folder
 
 - **Edit the library or the template, then rebuild. Never hand-edit `out/`.** Generated
@@ -86,8 +106,13 @@ filling it in on a call). Answers autosave to localStorage under a key per pack/
   pages. `answers/` is gitignored.
 - Respondent answers may contain customer PII (gate codes, card numbers on tickets,
   financing applications — see each pack's `sensitive` list). Treat exports accordingly.
-- Deploy: Vercel team `Clearpath`, project `discovery-worksheet`, production.
-  `index.html` at the root; `out/` alongside it so `…/out/<pack>/<trade>-t<tier>.html`
-  links can be sent by hand until the app exists.
+- Deploy: Vercel team `Clearpath`, project `discovery-worksheet`, production. The
+  project is **not** linked to GitHub. `vercel.json` in the repo runs `build.mjs` on
+  Vercel and serves only `public/` (`index.html` + `out/`), so the library source is not
+  public on the site. Until Brad links the repo in the Vercel dashboard, deploy by
+  pushing to master and then sending `deploy_to_vercel` a one-file tree: a `vercel.json`
+  whose buildCommand first pulls the master tarball
+  (`curl -sSL https://codeload.github.com/gadgetknight/discovery-worksheet/tar.gz/refs/heads/master | tar xz --strip-components=1 && …`).
+  Never inline the built HTML into a deploy call again — it's 700 KB.
 - The standing rules in `C:\Projects\CLAUDE.md` apply — commit and push from the
   session, PowerShell git blocks that start with `cd`.
