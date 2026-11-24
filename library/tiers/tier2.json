@@ -23,6 +23,7 @@
     ],
     "after": "When you’re done, {consultantFirst} reads it within two business days and sends you one page: what he heard, and the two or three things worth building first."
   },
-  "finishText": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Empty questions are marked so you can see what you skipped.",
+  "finishText": "Nothing has been sent yet — your answers are only in this browser until you send them. The button below shows you everything you wrote. Look it over, then press Send to {consultantFirst}. Empty questions are marked so you can see what you skipped.",
+  "finishTextManual": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Empty questions are marked so you can see what you skipped.",
   "exampleOpenByDefault": false
 }

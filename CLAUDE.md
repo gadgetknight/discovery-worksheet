@@ -1,8 +1,9 @@
 # CLAUDE.md — discovery-worksheet
 
-**Version:** 1.3.1 — 2026-09-08
+**Version:** 1.4.0 — 2026-11-23
 
 ### Changelog
+- **1.4.0 (2026-11-23)** — **The worksheet can send.** A customer told Brad he had "answered all the questions" and nothing ever arrived; the finish screen said "nothing has been sent yet" and left him to copy forty answers into an email. `submitUrl` is now set (`library/consultant.json`, and `CONFIG` in `index.html`) to `https://clearpathlabs.dev/api/worksheet`. Template 1.2.0 and `index.html` 1.1.0: Send is the first and only primary button on the review panel, the panel says nothing goes anywhere until it is pressed, and a sent sheet says so on the panel and on the page. Tiers carry two finish texts (`finishText` for a sheet that can send, `finishTextManual` — the old wording, verbatim — for one that can't); composer 1.1.0 passes both and the engine picks. "When answers come back" rewritten for the new arrival.
 - **1.3.1 (2026-09-08)** — Added "When answers come back" (answers → readback → project seed). Template 1.1.2: tier name removed from the customer's text export.
 - **1.3.0 (2026-09-08)** — Phase 1 of the platform plan: the library and composer exist. `vercel.json` builds on Vercel and serves `public/` only; deploy method documented under Rules. `library/` (spine, three tier profiles, first vertical pack, research notes, consultant.json), `compose/` (compose.mjs, build.mjs, template.html), `out/` (six generated worksheets + index). Rules rewritten for a folder with a build step. `index.html` stays the generic 1.0.1 worksheet.
 - **1.2.0 (2026-09-08)** — Brad decided: inside CRM_platform; five packs first (field-service trades, accounting practices, small law firms, venues, nonprofits & churches); Resend as sender (already verified on clearpathlabs.dev per the ClearPath site's CHANGELOG 0.8.0); customer never sees a tier; interview mode yes. Plan is 1.1.0.
@@ -18,10 +19,11 @@ the builder's side — no tier labels, no build levels, no scoring.
 
 Two things live here:
 
-1. **The generic worksheet** — `index.html` (1.0.1), live at
+1. **The generic worksheet** — `index.html` (1.1.0), live at
    https://discovery-worksheet.vercel.app. Retreat-center persona ("Dana") for the first
-   customer, Brad's daughter at Sandy Cove Ministries. Leave it alone unless she reports
-   a bug.
+   customer, Brad's daughter at Sandy Cove Ministries. 1.1.0 switched Send on and changed
+   nothing else — questions, ids and the autosave key are as they were, so answers already
+   in her browser are still there. Leave the rest alone unless she reports a bug.
 2. **The library** — the source of every worksheet from here on. See below.
 
 **Do not assume the domain.** Every pack is a different industry with its own research.
@@ -52,7 +54,8 @@ A worksheet is *composed*, never written by hand:
 - `library/research/<pack>.md` — the condensed, sourced findings behind the pack. Every
   example and list entry should trace to a line in it. Correct it, dated, when a real
   customer contradicts it.
-- `library/consultant.json` — Brad's name, email, optional `submitUrl`.
+- `library/consultant.json` — Brad's name, email, and `submitUrl` (where Send posts; see
+  "Where Send goes" under Rules).
 - `compose/compose.mjs` — pure function `compose({spine,tier,pack,trade,consultant})`
   → `{config, schema, coverage}`. No I/O, no dependencies. It ports unchanged to
   `lib/discovery/compose.ts` in CRM_platform when the app is built.
@@ -67,9 +70,13 @@ filling it in on a call). Answers autosave to localStorage under a key per pack/
 
 ## When answers come back
 
-1. The customer's export (the .md from **Review & send**, or the .json) arrives by email.
-   Save it as `answers/<date>-<name>-<trade>-t<tier>-answers.md`. `answers/` is gitignored
-   and stays that way — never commit it.
+1. The customer presses **Send**. An email with the subject `WORKSHEET: <business>` arrives
+   at support@clearpathlabs.dev carrying every answer exactly as they reviewed it; a lead
+   appears on the CRM board (source `clearpathlabs.dev/worksheet`) and Slack `#new-leads`
+   is pinged. Save the email's text as `answers/<date>-<name>-<trade>-t<tier>-answers.md`.
+   `answers/` is gitignored and stays that way — never commit it. (Before 2026-11-23 the
+   worksheet could not send, and this step depended on the customer emailing an export
+   themselves. One did not, and thought he had.)
 2. Within two business days — the worksheet promises this on the masthead — write the
    **readback**: one page, in Brad's voice, to the customer. *What I heard* (their pain,
    in their words, grouped), *what I'd build first* (two or three things, each with what
@@ -81,8 +88,9 @@ filling it in on a call). Answers autosave to localStorage under a key per pack/
    folder; the project's CLAUDE.md is written from them. Real answers also correct the
    pack — when a customer contradicts a persona example or the research file, fix the
    library, dated.
-4. Phase 2 (in CRM_platform) automates 1 and drafts 2: answers land on the lead, Brad is
-   notified, the readback is drafted for him to edit.
+4. Phase 2 (in CRM_platform) drafts 2: answers land on the lead and the readback is
+   drafted for him to edit. Step 1 was automated on 2026-11-23 by a route on the website
+   instead; when the Discovery app is built, `submitUrl` moves to it and that route goes.
 
 ## Rules for this folder
 
@@ -101,9 +109,20 @@ filling it in on a call). Answers autosave to localStorage under a key per pack/
   packs and the spine carry `version`; research files carry a dated changelog. Bump
   before editing; never delete old entries. `index.html` keeps its own.
 - No framework, no bundler, no npm install. `build.mjs` runs on plain Node (22+).
-- Answers stay in the respondent's browser unless `submitUrl` is set. No analytics,
-  tracking, or calls home. Never commit real answers, exports, or screenshots of filled
-  pages. `answers/` is gitignored.
+- Answers stay in the respondent's browser until they press Send. No analytics,
+  tracking, or other calls home. Never commit real answers, exports, or screenshots of
+  filled pages. `answers/` is gitignored.
+- **Where Send goes.** `submitUrl` is `https://clearpathlabs.dev/api/worksheet` — a route
+  in `C:\Projects\clearpath-labs-v2` (`app/api/worksheet/route.ts`, contract at the top
+  of `lib/worksheet.ts`). It saves the sheet to that site's Supabase `submissions` table,
+  emails it to Brad, and puts a lead on the CRM. The static worksheet has no server and no
+  keys, which is why the receiver lives there. **Change the POST body in the engine and
+  you must change `lib/worksheet.ts` too.** That route accepts posts only from
+  `https://discovery-worksheet.vercel.app`: a custom domain, or a preview URL, will show
+  every visitor "Couldn't send" until it is added to `ALLOWED_ORIGINS` in the route.
+- **A finish screen must never promise what the page can't do.** `finishText` is the
+  wording when `submitUrl` is set; `finishTextManual` is the wording when it isn't. Write
+  both for every tier. The engine picks.
 - Respondent answers may contain customer PII (gate codes, card numbers on tickets,
   financing applications — see each pack's `sensitive` list). Treat exports accordingly.
 - Deploy: Vercel team `Clearpath`, project `discovery-worksheet`, production. The

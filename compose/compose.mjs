@@ -1,6 +1,6 @@
 /**
  * compose.mjs — composes one worksheet from the library.
- * Version 1.0.0 — 2026-09-08
+ * Version 1.1.0 — 2026-11-23
  *
  * compose({ spine, tier, pack, trade, consultant }) → { config, schema, coverage }
  *
@@ -8,6 +8,11 @@
  * CRM_platform unchanged when the app is built.
  *
  * CHANGELOG
+ * 1.1.0  2026-11-23  Passes the tier's finishTextManual through to the engine:
+ *                    the finish-screen wording for a worksheet that cannot send
+ *                    (no submitUrl). finishText is now the wording for one that
+ *                    can. The engine picks; the page never promises a Send
+ *                    button it does not have.
  * 1.0.0  2026-09-08  First version: vocabulary tokens, tier filtering, list
  *                    expansion, pack overrides, persona examples with trade
  *                    overrides, tier masthead, coverage report.
@@ -124,6 +129,7 @@ export function compose({ spine, tier, pack, trade, consultant, note }) {
     sittings: tier.sittings ? clone(tier.sittings) : null,
     masthead: deepSub(clone(tier.masthead), sub),
     finishText: sub(tier.finishText || ""),
+    finishTextManual: sub(tier.finishTextManual || ""),
     exampleOpenByDefault: !!tier.exampleOpenByDefault,
     note: note || "",
     meta,

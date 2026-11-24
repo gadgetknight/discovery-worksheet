@@ -20,6 +20,7 @@
     "after": "When you’re done, I read it within two business days and send you one page: what I heard, and the two or three things we could build first.",
     "callOption": "I’d rather do this on a call with {consultantFirst}"
   },
-  "finishText": "That’s all fourteen. Nothing has been sent yet — the button below turns your answers into a plain text note you can send to {consultantFirst}, or just tap Print. Either way, you’ll hear back within two business days.",
+  "finishText": "That’s all fourteen. Nothing has been sent yet — tap the button below, look it over, then tap Send to {consultantFirst}. You’ll hear back within two business days.",
+  "finishTextManual": "That’s all fourteen. Nothing has been sent yet — the button below turns your answers into a plain text note you can send to {consultantFirst}, or just tap Print. Either way, you’ll hear back within two business days.",
   "exampleOpenByDefault": true
 }

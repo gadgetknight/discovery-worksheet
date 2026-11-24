@@ -5,13 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
   Discovery worksheet engine — template
-  Version 1.1.2 — 2026-09-08
+  Version 1.2.0 — 2026-11-23
   This file is the renderer. compose/build.mjs injects a composed CONFIG and
   SCHEMA (spine + tier profile + vertical pack) at the two placeholders below
   and writes a finished worksheet to out/. Do not hand-edit generated files;
   edit the library or this template and rebuild.
 
   CHANGELOG
+  1.2.0  2026-11-23  The worksheet can send. With submitUrl set, Send to <name> is
+                     the first and only primary button on the review panel, the
+                     panel says nothing goes anywhere until it is pressed, and a
+                     sent sheet says so on the panel AND on the page. The POST now
+                     carries the reviewed text alongside the JSON. Finish-screen
+                     wording follows submitUrl (finishText / finishTextManual).
+                     Why: a customer answered every question, read "nothing has
+                     been sent yet" as a formality, and Brad never got it.
   1.1.2  2026-09-08  The tier name no longer appears in the customer's text export
                      (it stays in the JSON meta for Brad). Rule: the customer
                      never sees a tier.
@@ -784,14 +792,14 @@ const SCHEMA = /*__SCHEMA__*/[]/*__END_SCHEMA__*/;
     if(M.after){ $("#afterText").textContent = subP(M.after); $("#afterBox").hidden = false; }
     if(PERSON.interview){ const b = $("#interviewBanner"); b.textContent = "Interview mode — " + CONFIG.consultantFirst + " is filling this in with " + (PERSON.name || "you") + " on the call."; b.hidden = false; }
     else if(M.callOption){ const b = $("#callBtn"); b.textContent = subP(M.callOption); b.hidden = false; b.addEventListener("click", () => { location.href = "mailto:" + encodeURIComponent(CONFIG.consultantEmail) + "?subject=" + encodeURIComponent("Let’s do the worksheet on a call") + "&body=" + encodeURIComponent("Hi " + CONFIG.consultantFirst + ",\n\nI’d rather do this on a call. Good times for me:\n\n"); }); }
-    $("#finishText").textContent = subP(CONFIG.finishText || "");
+    $("#finishText").textContent = subP((CONFIG.submitUrl ? CONFIG.finishText : (CONFIG.finishTextManual || CONFIG.finishText)) || "");
 
     const overlay = $("#overlay"), ta = $("#exportText"), st = $("#sheetStatus");
     const flash = (msg, ok=true) => { st.textContent = msg; st.className = "status " + (ok ? "ok" : "bad"); setTimeout(() => { st.textContent = ""; }, 4000); };
 
     $("#btnReview").addEventListener("click", () => {
       ta.value = toMarkdown();
-      $("#sheetSub").textContent = personalize("Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
+      $("#sheetSub").textContent = personalize(CONFIG.submitUrl ? "Look it over, then press Send to {first}. Nothing goes anywhere until you do. Copy and Download are here if you want a copy for yourself." : "Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
       overlay.hidden = false; ta.focus(); ta.setSelectionRange(0, 0);
     });
     $("#btnClose").addEventListener("click", () => overlay.hidden = true);
@@ -813,12 +821,20 @@ const SCHEMA = /*__SCHEMA__*/[]/*__END_SCHEMA__*/;
 
     if(CONFIG.submitUrl){
       const b = $("#btnSend"); b.hidden = false; b.textContent = "Send to " + CONFIG.consultantFirst; b.classList.add("primary");
+      // Send is the point of this screen: it goes first, and Copy steps back.
+      b.parentNode.prepend(b); $("#btnCopy").classList.remove("primary");
       b.addEventListener("click", async () => {
         b.disabled = true; st.textContent = "Sending…"; st.className = "status";
         try{
-          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body:toJSON()});
+          // The JSON export, plus the same text the person just reviewed, so what
+          // arrives reads exactly as it did on their screen.
+          const body = JSON.stringify(Object.assign(JSON.parse(toJSON()), {text: ta.value || toMarkdown()}));
+          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body});
           if(!r.ok) throw new Error("HTTP " + r.status);
-          st.textContent = "Sent. Thank you!"; st.className = "status ok";
+          const done = "Sent to " + CONFIG.consultantFirst + ". You don’t need to do anything else.";
+          st.textContent = done; st.className = "status ok"; b.textContent = "Sent ✓";
+          // Said again on the page itself, so it is still there after this panel closes.
+          const after = $("#finishStatus"); after.textContent = done; after.className = "status ok";
         }catch(e){ st.textContent = "Couldn’t send (" + e.message + "). Use Copy or Download instead."; st.className = "status bad"; b.disabled = false; }
       });
     }

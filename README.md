@@ -1,6 +1,6 @@
 # discovery-worksheet — "Where the Time Goes"
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Written:** 2026-09-08
 **Live:** https://discovery-worksheet.vercel.app (Vercel team `Clearpath`, project `discovery-worksheet`, production)
 
@@ -10,8 +10,9 @@ small library that composes a worksheet per industry and business size.
 
 ## Files
 
-- `index.html` — the generic worksheet (1.0.1), retreat-center persona for the first
-  customer (Brad's daughter, operations at Sandy Cove Ministries). Unchanged since.
+- `index.html` — the generic worksheet (1.1.0), retreat-center persona for the first
+  customer (Brad's daughter, operations at Sandy Cove Ministries). Send was switched on
+  2026-11-23; otherwise unchanged.
 - `library/` — the source of every other worksheet:
   - `spine.json` — the questions, with `{tokens}` for the pack vocabulary.
   - `tiers/tier1.json`, `tier2.json`, `tier3.json` — owner-operator (≈12 min, one
@@ -69,6 +70,7 @@ GitHub repo in the Vercel dashboard would make every push deploy on its own.
 
 ## Changelog
 
+- **1.3.0 — 2026-11-23** — The worksheet can send. Send to Brad posts a finished sheet to `https://clearpathlabs.dev/api/worksheet`, which saves it, emails it to Brad and puts a lead on the CRM. Template engine 1.2.0, generic worksheet 1.1.0, composer 1.1.0; finish-screen wording follows whether the page can send.
 - **1.2.0 — 2026-09-08** — Library and composer (Phase 1 of the plan): spine, three tier profiles, field-service trades pack with research, template engine 1.1.1, six generated worksheets in `out/`.
 - **1.1.0 — 2026-09-08** — Platform plan and clickable prototype added. Worksheet unchanged (1.0.1).
 - **1.0.1 — 2026-09-08** — Fix: “Review & send” section was pinned to the left edge; masthead side padding restored so it aligns with the parts below.

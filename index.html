@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
   Where the Time Goes — discovery worksheet
-  Version 1.0.1 — 2026-09-08
+  Version 1.1.0 — 2026-11-23
 
   CHANGELOG
+  1.1.0  2026-11-23  Send is switched on (CONFIG.submitUrl). The review panel leads
+                     with Send to <name>, says nothing goes anywhere until it is
+                     pressed, and confirms on the panel and on the page once sent.
+                     Questions, ids and the autosave key are untouched, so answers
+                     already saved in someone's browser are still there.
   1.0.1  2026-09-08  Fix: "Review & send" section was pinned to the left edge
                      (.finish margin shorthand overrode the centering margin);
                      masthead was missing its side padding so it sat 20px left
@@ -370,7 +375,7 @@ const CONFIG = {
   minutes: "20–30",
   // Optional. If set, a "Send to <name>" button POSTs the answers as JSON here.
   // Works with a Formspree form endpoint or your own serverless function.
-  submitUrl: "",
+  submitUrl: "https://clearpathlabs.dev/api/worksheet",
   storageKey: "where-the-time-goes-v1",
   // The example persona used throughout. Change here to swap the whole thread.
   exampleWho: "Dana, operations manager at a 120-room retreat and conference center"
@@ -1025,14 +1030,14 @@ const SCHEMA = [
   function wire(){
     $("#lede").textContent = personalize("You know your work better than anyone. This worksheet helps you lay out what’s slow, repetitive, or error-prone, so that {first} can build something that actually helps instead of guessing. There are no wrong answers, and you don’t need to know anything about software.");
     $("#mastEyebrow").textContent = "Discovery worksheet · " + CONFIG.minutes + " minutes";
-    $("#finishText").textContent = personalize("Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {first} ({email}), download as a file, or print. Empty questions are marked so you can see what you skipped.");
+    $("#finishText").textContent = personalize(CONFIG.submitUrl ? "Nothing has been sent yet — your answers are only in this browser until you send them. The button below shows you everything you wrote. Look it over, then press Send to {first}. Empty questions are marked so you can see what you skipped." : "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {first} ({email}), download as a file, or print. Empty questions are marked so you can see what you skipped.");
 
     const overlay = $("#overlay"), ta = $("#exportText"), st = $("#sheetStatus");
     const flash = (msg, ok=true) => { st.textContent = msg; st.className = "status " + (ok ? "ok" : "bad"); setTimeout(() => { st.textContent = ""; }, 4000); };
 
     $("#btnReview").addEventListener("click", () => {
       ta.value = toMarkdown();
-      $("#sheetSub").textContent = personalize("Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
+      $("#sheetSub").textContent = personalize(CONFIG.submitUrl ? "Look it over, then press Send to {first}. Nothing goes anywhere until you do. Copy and Download are here if you want a copy for yourself." : "Copy this into an email to {email}, or download it. If a download does nothing in your browser, use Copy.");
       overlay.hidden = false; ta.focus(); ta.setSelectionRange(0, 0);
     });
     $("#btnClose").addEventListener("click", () => overlay.hidden = true);
@@ -1054,12 +1059,20 @@ const SCHEMA = [
 
     if(CONFIG.submitUrl){
       const b = $("#btnSend"); b.hidden = false; b.textContent = "Send to " + CONFIG.consultantFirst; b.classList.add("primary");
+      // Send is the point of this screen: it goes first, and Copy steps back.
+      b.parentNode.prepend(b); $("#btnCopy").classList.remove("primary");
       b.addEventListener("click", async () => {
         b.disabled = true; st.textContent = "Sending…"; st.className = "status";
         try{
-          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body:toJSON()});
+          // The JSON export, plus the same text the person just reviewed, so what
+          // arrives reads exactly as it did on their screen.
+          const body = JSON.stringify(Object.assign(JSON.parse(toJSON()), {text: ta.value || toMarkdown()}));
+          const r = await fetch(CONFIG.submitUrl, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"}, body});
           if(!r.ok) throw new Error("HTTP " + r.status);
-          st.textContent = "Sent. Thank you!"; st.className = "status ok";
+          const done = "Sent to " + CONFIG.consultantFirst + ". You don’t need to do anything else.";
+          st.textContent = done; st.className = "status ok"; b.textContent = "Sent ✓";
+          // Said again on the page itself, so it is still there after this panel closes.
+          const after = $("#finishStatus"); after.textContent = done; after.className = "status ok";
         }catch(e){ st.textContent = "Couldn’t send (" + e.message + "). Use Copy or Download instead."; st.className = "status bad"; b.disabled = false; }
       });
     }

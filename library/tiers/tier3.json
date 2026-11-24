@@ -26,6 +26,7 @@
     ],
     "after": "When you submit, {consultantFirst} reads everything within two business days and sends you one page: what he heard, and the two or three things worth building first, with what each would take."
   },
-  "finishText": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Attachments go by email to the same address.",
+  "finishText": "Nothing has been sent yet — your answers are only in this browser until you send them. The button below shows you everything you wrote. Look it over, then press Send to {consultantFirst}. Attachments go by email to {consultantEmail}.",
+  "finishTextManual": "Nothing has been sent yet — your answers are only in this browser. The button below turns them into a plain text summary you can copy into an email to {consultantFirst} ({consultantEmail}), download as a file, or print. Attachments go by email to the same address.",
   "exampleOpenByDefault": false
 }
